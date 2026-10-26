@@ -1,7 +1,7 @@
 # Cmdlog Commands
 
 One command, `:Cmdlog [subcommand]`, built via
-[`lib.nvim.bindings.usercmd.composer`](https://github.com/StefanBartl/lib.nvim) with
+[`lib.nvim.bindings.usercmd.composer`](https://github.com/WKDSteve/lib.nvim) with
 `<Tab>` completion on the subcommand.
 
 ## `:Cmdlog`

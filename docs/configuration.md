@@ -198,7 +198,7 @@ that persisted order (elsewhere, order is Telescope's own sort).
 ### Project: lazygit
 
 `mappings.lazygit` (default `<C-g>`) opens
-[gitsuite.nvim](https://github.com/StefanBartl/gitsuite.nvim)'s lazygit
+[gitsuite.nvim](https://github.com/WKDSteve/gitsuite.nvim)'s lazygit
 float for the current project's Git root, straight from the project
 history picker (`:Cmdlog project` / the `project` source in `cycle_source`
 rotation) — no need to leave the picker to run `:Git ui lazygit` yourself.

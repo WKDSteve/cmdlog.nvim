@@ -33,7 +33,7 @@ function M.check()
   if has_module("lib.nvim.fs.is_dir") then
     ok("lib.nvim found (required for cross-platform fs/notify helpers)")
   else
-    error_("lib.nvim not found", { 'Install "StefanBartl/lib.nvim"' })
+    error_("lib.nvim not found", { 'Install "WKDSteve/lib.nvim"' })
   end
 
   local config_ok, config = pcall(require, "cmdlog.config")

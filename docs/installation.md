@@ -6,7 +6,7 @@ have to make while installing: which picker backend to pull in.
 ## Requirements
 
 - Neovim **0.9+**
-- [lib.nvim](https://github.com/StefanBartl/lib.nvim) — **required**. The
+- [lib.nvim](https://github.com/WKDSteve/lib.nvim) — **required**. The
   `:Cmdlog` command tree is built on `lib.nvim.bindings.usercmd.composer`,
   the cross-platform fs/notify/job helpers and the delete-confirmation dialog
   (`ui.kit.ask`, with a `vim.ui.select` fallback) come from there too.
@@ -14,7 +14,7 @@ have to make while installing: which picker backend to pull in.
   - [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) — only
     if `picker = "telescope"` (the default)
   - [fzf-lua](https://github.com/ibhagwan/fzf-lua) — only if `picker = "fzf"`
-- [gitsuite.nvim](https://github.com/StefanBartl/gitsuite.nvim) — optional.
+- [gitsuite.nvim](https://github.com/WKDSteve/gitsuite.nvim) — optional.
   Backs `mappings.lazygit` (project picker only, default `<C-g>`) — opens a
   lazygit float for the current project without it, the mapping notifies
   instead of erroring.
@@ -40,10 +40,10 @@ which subcommands exist. Details in
 
 ```lua
 {
-  "StefanBartl/cmdlog.nvim",
+  "WKDSteve/cmdlog.nvim",
   lazy = false,
   dependencies = {
-    "StefanBartl/lib.nvim",          -- required
+    "WKDSteve/lib.nvim",          -- required
     "nvim-telescope/telescope.nvim", -- or "ibhagwan/fzf-lua"
   },
   opts = {}, -- picker defaults to "telescope"; set `picker = "fzf"` to switch
@@ -66,11 +66,11 @@ almost nothing is lost:
 
 ```lua
 {
-  "StefanBartl/cmdlog.nvim",
+  "WKDSteve/cmdlog.nvim",
   lazy = true,
   event = "VeryLazy", -- or e.g. "BufReadPost"
   dependencies = {
-    "StefanBartl/lib.nvim",
+    "WKDSteve/lib.nvim",
     "nvim-telescope/telescope.nvim",
   },
   opts = {},
@@ -81,12 +81,12 @@ On a command or a key trigger, accept the gap knowingly:
 
 ```lua
 {
-  "StefanBartl/cmdlog.nvim",
+  "WKDSteve/cmdlog.nvim",
   lazy = true,
   cmd = { "Cmdlog" },
   -- or: keys = { { "<leader>cl", "<cmd>Cmdlog<CR>", desc = "Command history" } },
   dependencies = {
-    "StefanBartl/lib.nvim",
+    "WKDSteve/lib.nvim",
     "nvim-telescope/telescope.nvim",
   },
   opts = {},
@@ -102,9 +102,9 @@ a plugin that never loads: `:Cmdlog` will not exist.
 
 ```lua
 use({
-  "StefanBartl/cmdlog.nvim",
+  "WKDSteve/cmdlog.nvim",
   requires = {
-    "StefanBartl/lib.nvim",
+    "WKDSteve/lib.nvim",
     "nvim-telescope/telescope.nvim", -- or "ibhagwan/fzf-lua"
   },
   config = function()
@@ -116,9 +116,9 @@ use({
 ## vim-plug
 
 ```vim
-Plug 'StefanBartl/lib.nvim'
+Plug 'WKDSteve/lib.nvim'
 Plug 'nvim-telescope/telescope.nvim' " or 'ibhagwan/fzf-lua'
-Plug 'StefanBartl/cmdlog.nvim'
+Plug 'WKDSteve/cmdlog.nvim'
 ```
 
 ```lua

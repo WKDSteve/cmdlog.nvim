@@ -20,7 +20,7 @@ bash scripts/test.sh                  # all specs under TESTS/ (testing.nvim)
 bash scripts/test.sh --json ir.json   # also write the machine-readable result
 ```
 
-The suite is run by [testing.nvim](https://github.com/StefanBartl/testing.nvim)
+The suite is run by [testing.nvim](https://github.com/WKDSteve/testing.nvim)
 (dialect `script`: `smoke_spec.lua` runs itself in its own nvim process; its exit
 code and the printed `FAIL` lines are the verdict). `scripts/test.sh` finds
 testing.nvim and the dependencies listed in `.testing.lua` in `$<NAME>_DIR`,

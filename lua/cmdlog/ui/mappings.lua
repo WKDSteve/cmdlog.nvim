@@ -115,7 +115,7 @@ return function(refresh_fn, delete_fn, opts)
         local ok, ui = pcall(require, "gitsuite.features.ui")
         if not ok then
           notify.info(
-            'gitsuite.nvim is not installed -- install "StefanBartl/gitsuite.nvim" to use this mapping'
+            'gitsuite.nvim is not installed -- install "WKDSteve/gitsuite.nvim" to use this mapping'
           )
           return
         end

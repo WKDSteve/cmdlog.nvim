@@ -18,9 +18,9 @@
 [![Neovim](https://img.shields.io/badge/Neovim-0.9%2B-57A143?logo=neovim&logoColor=white)](https://neovim.io)
 [![Lua](https://img.shields.io/badge/Lua-5.1%2FLuaJIT-2C2D72?logo=lua&logoColor=white)](https://www.lua.org)
 ![Status](https://img.shields.io/badge/status-beta-orange)
-[![wkd](https://img.shields.io/badge/wkd-family-c6ff3d)](https://stefanbartl.github.io/wkd/p/cmdlog/)
+[![wkd](https://img.shields.io/badge/wkd-family-c6ff3d)](https://wkdsteve.github.io/wkd/p/cmdlog/)
 
-> Part of the [wkd](https://stefanbartl.github.io/wkd/) family — see this plugin's [page](https://stefanbartl.github.io/wkd/p/cmdlog/) on the site.
+> Part of the [wkd](https://wkdsteve.github.io/wkd/) family — see this plugin's [page](https://wkdsteve.github.io/wkd/p/cmdlog/) on the site.
 
 Interactively view, search and reuse your Neovim command-line (`:`) history and
 your shell history, through Telescope or fzf-lua. Commands are inserted into
@@ -57,7 +57,7 @@ each page answers.
 - [Health check](docs/FEATURES/PICKER.md#checkhealth-cmdlog) — what `:checkhealth cmdlog` reports.
 - [Adding a picker backend](docs/add_picker.md) — what a third front end would have to implement.
 - [Contributing](docs/CONTRIBUTING.md) — ground rules and project layout.
-- [Feedback](https://github.com/StefanBartl/cmdlog.nvim/issues)
+- [Feedback](https://github.com/WKDSteve/cmdlog.nvim/issues)
 
 `:help cmdlog` is the same reference inside the editor.
 

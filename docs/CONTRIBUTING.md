@@ -6,7 +6,7 @@ Thanks for your interest in contributing to `cmdlog.nvim`.
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/StefanBartl/cmdlog.nvim.git
+   git clone https://github.com/WKDSteve/cmdlog.nvim.git
    ```
 2. Point your plugin manager at the clone instead of the GitHub name — with
    lazy.nvim, `dir = "/path/to/cmdlog.nvim"` in place of the repo string.
