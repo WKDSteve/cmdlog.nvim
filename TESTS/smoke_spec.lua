@@ -1522,14 +1522,13 @@ do
   local kit_confirm = require("lib.nvim.ui.kit.confirm")
   local original_open = kit_confirm.open
   local original_select = vim.ui.select
-  local original_poll = kit_confirm.ASK_POLL_MS
 
   -- the dialog opens and the user says yes
   local seen_question
   ---@diagnostic disable-next-line: duplicate-set-field
   kit_confirm.open = function(opts)
     seen_question = opts.question
-    opts.on_answer(true)
+    opts.on_answer("Yes, delete", 2)
     return {}
   end
   local answer
@@ -1539,6 +1538,10 @@ do
       answer = yes
     end,
   })
+  -- the dialog delivers an answer given while it opens on the next loop turn, never inside the call
+  vim.wait(500, function()
+    return answer ~= nil
+  end, 5)
   check("cmdlog.ui.confirm.ask: passes the question to the dialog", seen_question == "Delete it?")
   check("cmdlog.ui.confirm.ask: a yes answers true", answer == true)
 
@@ -1552,7 +1555,7 @@ do
   ---@diagnostic disable-next-line: duplicate-set-field
   vim.ui.select = function(_, o, cb)
     select_prompt = o.prompt
-    cb("No")
+    cb("No", 1)
   end
   answer = nil
   confirm.ask({
@@ -1561,11 +1564,13 @@ do
       answer = yes
     end,
   })
+  vim.wait(500, function()
+    return answer ~= nil
+  end, 5)
   check("cmdlog.ui.confirm.ask: falls back to vim.ui.select", select_prompt == "Delete it?")
   check("cmdlog.ui.confirm.ask: the fallback's No answers false", answer == false)
 
   -- another dialog is open: the question waits for it and does not replace it
-  kit_confirm.ASK_POLL_MS = 5
   local blocker_answer
   kit_confirm.open = original_open
   kit_confirm.open({
@@ -1594,7 +1599,6 @@ do
   check("cmdlog.ui.confirm.ask: a declined waiting question answers false", waiting_answer == false)
 
   kit_confirm.open = original_open
-  kit_confirm.ASK_POLL_MS = original_poll
   vim.ui.select = original_select
   kit_confirm.close()
 end
