@@ -460,7 +460,7 @@ function M.delete_entry(cmd, opts, on_done)
     return
   end
 
-  -- cmdlog.ui.confirm answers through lib.nvim's ui.kit.ask (a "no" unless the
+  -- cmdlog.ui.confirm answers through lib.nvim's shared dialog (a "no" unless the
   -- user said yes; vim.ui.select when the dialog cannot open) -- every other
   -- function in this module reads shell history without it.
   require("cmdlog.ui.confirm").ask({

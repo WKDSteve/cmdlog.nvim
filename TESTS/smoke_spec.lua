@@ -1481,26 +1481,33 @@ do
 
   ---@diagnostic disable-next-line: duplicate-set-field
   kit.open = function(opts)
-    opts.on_answer(true)
+    opts.on_answer("Yes, delete", 2)
     return {} -- a dialog that opened (a nil return means it could not)
   end
   local result_yes
   shell.delete_entry("git status", nil, function(ok, err)
     result_yes = { ok = ok, err = err }
   end)
+  -- the dialog delivers an answer given while it opens on the next loop turn, never inside the call
+  vim.wait(500, function()
+    return result_yes ~= nil
+  end, 5)
   check("delete_entry: confirmed deletion succeeds", result_yes.ok == true)
   check("delete_entry: confirmed deletion actually rewrote the file", #vim.fn.readfile(tmp) == 0)
 
   vim.fn.writefile({ "git status" }, tmp)
   ---@diagnostic disable-next-line: duplicate-set-field
   kit.open = function(opts)
-    opts.on_answer(false)
+    opts.on_answer("No", 1)
     return {} -- a dialog that opened (a nil return means it could not)
   end
   local result_no
   shell.delete_entry("git status", nil, function(ok, err)
     result_no = { ok = ok, err = err }
   end)
+  vim.wait(500, function()
+    return result_no ~= nil
+  end, 5)
   check(
     "delete_entry: declined confirmation reports 'cancelled'",
     result_no.ok == false and result_no.err == "cancelled"
@@ -1626,7 +1633,7 @@ do
     local current = vim.fn.readfile(tmp)
     table.insert(current, "ls -la")
     vim.fn.writefile(current, tmp)
-    opts.on_answer(true)
+    opts.on_answer("Yes, delete", 2)
     return {} -- a dialog that opened (a nil return means it could not)
   end
 
@@ -1634,6 +1641,9 @@ do
   shell.delete_entry("git status", nil, function(ok, err)
     result = { ok = ok, err = err }
   end)
+  vim.wait(500, function()
+    return result ~= nil
+  end, 5)
 
   check("delete_entry: still deletes the target after a late append", result.ok == true)
   check(
