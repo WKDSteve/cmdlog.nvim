@@ -91,8 +91,8 @@ underlying history source:
 
 - Neovim `:` command history — via `vim.fn.histdel()`. In-memory/shada only,
   no confirmation prompt.
-- Shell history file — rewrites the file on disk after a `vim.fn.confirm()`
-  prompt, since this touches a file outside of Neovim's own state.
+- Shell history file — rewrites the file on disk after a confirmation
+  dialog (No first and focused), since this touches a file outside of Neovim's own state.
 - In the combined `:Cmdlog`/`:CmdlogFull` pickers, both sources are tried;
   whichever one(s) actually contain the command are updated.
 

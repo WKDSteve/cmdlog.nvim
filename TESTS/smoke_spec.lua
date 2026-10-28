@@ -1520,7 +1520,7 @@ do
   vim.fn.delete(tmp)
 end
 
--- ── cmdlog.ui.confirm: answered through lib.nvim's ui.kit.ask ──────────────
+-- ── cmdlog.ui.confirm: answered through lib.nvim's dialog.yesno ────────────
 -- A delete must never go ahead without an explicit yes: a dialog that cannot
 -- open falls back to vim.ui.select, a cancelled one is a "no", and a question
 -- raised while another dialog is open waits instead of replacing it.

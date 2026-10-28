@@ -9,7 +9,7 @@ have to make while installing: which picker backend to pull in.
 - [lib.nvim](https://github.com/WKDSteve/lib.nvim) — **required**. The
   `:Cmdlog` command tree is built on `lib.nvim.bindings.usercmd.composer`,
   the cross-platform fs/notify/job helpers and the delete-confirmation dialog
-  (`ui.kit.ask`, with a `vim.ui.select` fallback) come from there too.
+  (`lib.nvim.ui.dialog.yesno`, with a `vim.ui.select` fallback) come from there too.
 - One picker backend:
   - [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) — only
     if `picker = "telescope"` (the default)

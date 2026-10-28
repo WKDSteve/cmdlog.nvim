@@ -219,8 +219,8 @@ return function(refresh_fn, delete_fn, opts)
           return
         end
 
-        -- cmdlog.ui.confirm answers through lib.nvim's ui.kit.ask: anything but an
-        -- explicit yes is a no, and vim.ui.select takes over if the dialog cannot open.
+        -- cmdlog.ui.confirm answers through lib.nvim's shared dialog (`dialog.yesno`): anything
+        -- but an explicit yes is a no, and vim.ui.select takes over if the dialog cannot open.
         require("cmdlog.ui.confirm").ask({
           question = ("Delete %d selected entries from their underlying history?"):format(#targets),
           on_answer = function(yes)
