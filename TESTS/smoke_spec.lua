@@ -2335,6 +2335,185 @@ do
   config.options.keymaps = {}
 end
 
+-- ── bindings.keymaps + :Cmdlog: pressed for real, effect checked ───────────
+-- The suites above only ask whether a keymap / subcommand is *registered*.
+-- This one binds every catalog entry, presses the key with nvim_feedkeys
+-- (mode "mx": remapped like typed input, run to completion before the call
+-- returns), then types each `:Cmdlog ...` line on the real command line, and
+-- checks what actually ran. The picker functions are swapped for recorders
+-- on the real module tables (so a catalog entry naming a function its module
+-- lacks still fails), every data path points into a fresh temp directory,
+-- and the tracker's record functions are stubbed -- typing `:Cmdlog ...`
+-- fires CmdlineLeave, and nothing here may write the user's own
+-- stdpath("data")/cmdlog files.
+do
+  local config = require("cmdlog.config")
+  local keymaps = require("cmdlog.bindings.keymaps")
+  local usrcmds = require("cmdlog.bindings.usrcmds")
+  local favorites = require("cmdlog.core.favorites")
+  local project_history = require("cmdlog.core.project_history")
+  local stats = require("cmdlog.core.stats")
+  local errors = require("cmdlog.core.errors")
+
+  local tmp = vim.fn.tempname()
+  vim.fn.mkdir(tmp, "p")
+  tmp = vim.fs.normalize(tmp)
+
+  local saved_options = vim.deepcopy(config.options)
+  config.options.favorites_path = tmp .. "/favorites.json"
+  config.options.favorite_tags_path = tmp .. "/favorite_tags.json"
+  config.options.project_history_path = tmp .. "/project_history.json"
+  config.options.stats_path = tmp .. "/stats.json"
+  config.options.errors_path = tmp .. "/errors.json"
+  config.options.project_scoped = { enabled = false }
+
+  local originals = {
+    ph = project_history.record,
+    stats = stats.record,
+    errors = errors.record,
+    notify = vim.notify,
+  }
+  ---@diagnostic disable-next-line: duplicate-set-field
+  project_history.record = function() end
+  ---@diagnostic disable-next-line: duplicate-set-field
+  stats.record = function() end
+  ---@diagnostic disable-next-line: duplicate-set-field
+  errors.record = function() end
+
+  local said = {} ---@type string[]
+  ---@diagnostic disable-next-line: duplicate-set-field
+  vim.notify = function(msg) -- luacheck: ignore 122
+    said[#said + 1] = tostring(msg)
+  end
+
+  -- Recorders in place of every catalog entry's picker function.
+  local ran = {} ---@type string[]
+  local patched = {} ---@type { mod: table, fn: string, orig: function }[]
+  for _, entry in ipairs(usrcmds.catalog) do
+    local key = entry.path or ""
+    local ok_mod, mod = pcall(require, entry.module)
+    check(
+      ("press: %s's picker module loads and has %s()"):format(entry.module, entry.fn),
+      ok_mod and type(mod) == "table" and type(mod[entry.fn]) == "function",
+      tostring(mod)
+    )
+    if ok_mod and type(mod) == "table" then
+      patched[#patched + 1] = { mod = mod, fn = entry.fn, orig = mod[entry.fn] }
+      mod[entry.fn] = function()
+        ran[#ran + 1] = key
+      end
+    end
+  end
+
+  ---@param keys string typed as if from the keyboard, run to completion
+  local function press(keys)
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), "mx", false)
+  end
+
+  ---@param line string a `:` command line, typed and executed
+  local function type_cmd(line)
+    press(":" .. line .. "<CR>")
+  end
+
+  local body_ok, body_err = pcall(function()
+    -- One keymap per catalog entry, no lhs a prefix of another (no timeout
+    -- wait): zQa, zQb, ... in sorted catalog order.
+    local names = vim.tbl_keys(keymaps.catalog())
+    table.sort(names)
+    local lhs_of = {}
+    local km = {}
+    for i, name in ipairs(names) do
+      lhs_of[name] = "zQ" .. string.char(96 + i)
+      km[name] = lhs_of[name]
+    end
+    config.options.keymaps = km
+    keymaps.register()
+
+    for _, name in ipairs(names) do
+      ran = {}
+      press(lhs_of[name])
+      local label = name == "" and "bare :Cmdlog" or (":Cmdlog " .. name)
+      check(
+        ("press: the %s keymap runs its picker, and only that"):format(label),
+        #ran == 1 and ran[1] == name,
+        vim.inspect(ran)
+      )
+    end
+
+    -- The same pickers, reached by typing the command line.
+    for _, entry in ipairs(usrcmds.catalog) do
+      local key = entry.path or ""
+      ran = {}
+      type_cmd(entry.path and ("Cmdlog " .. entry.path) or "Cmdlog")
+      check(
+        ("typed: :Cmdlog%s runs %s.%s"):format(
+          entry.path and (" " .. entry.path) or "",
+          entry.module,
+          entry.fn
+        ),
+        #ran == 1 and ran[1] == key,
+        vim.inspect(ran)
+      )
+    end
+
+    -- :Cmdlog risky test <cmd>: the report names the pattern that matched.
+    local saved_patterns = config.options.risky_patterns
+    config.options.risky_patterns = { "rm%s+%-rf" }
+    said = {}
+    type_cmd("Cmdlog risky test rm -rf /tmp/x")
+    local report = table.concat(said, "\n")
+    check(
+      "typed: :Cmdlog risky test reports the matching pattern",
+      report:find("rm%s+%-rf", 1, true) ~= nil,
+      report
+    )
+    config.options.risky_patterns = saved_patterns
+
+    -- :Cmdlog export <path>: writes the current favorites as JSON.
+    favorites.save({ "echo one", "echo two" })
+    local export_file = tmp .. "/out.export.json"
+    type_cmd("Cmdlog export " .. export_file)
+    local exported = vim.fn.filereadable(export_file) == 1
+        and vim.fn.json_decode(table.concat(vim.fn.readfile(export_file), "\n"))
+      or nil
+    check(
+      "typed: :Cmdlog export writes the favorites to the given file",
+      vim.deep_equal(exported, { "echo one", "echo two" }),
+      vim.inspect(exported)
+    )
+
+    -- :Cmdlog import <path>: merges, keeping the existing order, deduplicated.
+    local import_file = tmp .. "/in.json"
+    vim.fn.writefile({ vim.fn.json_encode({ "echo two", "echo three" }) }, import_file)
+    type_cmd("Cmdlog import " .. import_file)
+    check(
+      "typed: :Cmdlog import merges new favorites after the existing ones",
+      vim.deep_equal(favorites.load(), { "echo one", "echo two", "echo three" }),
+      vim.inspect(favorites.load())
+    )
+  end)
+  check("press/typed suite ran to the end", body_ok, tostring(body_err))
+
+  -- Every typed line fired CmdlineLeave, whose tracker work is deferred with
+  -- vim.schedule: let it run now, while the record stubs and the temp paths
+  -- are still in place, not after they have been restored.
+  vim.wait(50, function()
+    return false
+  end, 10)
+  for _, p in ipairs(patched) do
+    p.mod[p.fn] = p.orig
+  end
+  for _, lhs in ipairs(vim.tbl_values(config.options.keymaps or {})) do
+    pcall(vim.keymap.del, "n", lhs)
+  end
+  project_history.record = originals.ph
+  stats.record = originals.stats
+  errors.record = originals.errors
+  vim.notify = originals.notify -- luacheck: ignore 122
+  config.options = saved_options
+  vim.fn.delete(tmp, "rf")
+end
+
 -- ── bindings.picker_mappings: resolved() merges the configured key in ──────
 do
   local config = require("cmdlog.config")

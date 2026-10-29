@@ -79,7 +79,12 @@ and a stubbed `ui.mappings`, so none of this needs a real picker backend); the
 empty-state guard clauses in
 `ui.favorites_picker`/`ui.stats_picker`/`ui.lua_picker`/`ui.project_picker`;
 `bindings.usrcmds`' catalog shape and real `:Cmdlog` registration/completion;
-`bindings.keymaps`' catalog and optional entry-point keymaps;
+`bindings.keymaps`' catalog and optional entry-point keymaps; every
+catalog keymap actually *pressed* (`nvim_feedkeys(..., "mx")`) and every
+`:Cmdlog` subcommand typed on the real command line (`risky test`, `export`
+and `import` included), with the picker functions swapped for recorders and
+all data paths in a temp directory, so what ran is asserted, not just what is
+registered;
 `bindings.picker_mappings`; `bindings.catalog()`'s aggregation (including a
 documented quirk, pinned so a future fix is deliberate); and
 `integrations.which_key`'s no-op-without-which-key path plus its spec
