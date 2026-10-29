@@ -115,7 +115,8 @@ mappings             Keys bound inside a picker (Telescope only; the
                      refresh <C-r>, delete <C-x>, toggle_selection
                      <C-Space>, tag <C-t>, cycle_source <C-s>,
                      undo_favorite <C-z>, move_favorite_up <C-Up>,
-                     move_favorite_down <C-Down>.
+                     move_favorite_down <C-Down>,
+                     lazygit <C-g>.
 
 project_scoped       { enabled = false }. When enabled, favorites are
                      kept in a separate file per Git project instead of
@@ -245,6 +246,9 @@ no favorite toggle, no tag, no delete.
 
 <C-Down>    (favorites picker only) Move the selected favorite one slot
             down in the persisted order. mappings.move_favorite_down.
+
+<C-g>       (project picker only) Open lazygit for the selected project's
+            root. Needs gitsuite.nvim. mappings.lazygit.
 
 ==============================================================================
 COMMAND PREVIEWS                                       *cmdlog-previews*

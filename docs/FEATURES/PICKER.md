@@ -91,8 +91,9 @@ contains the command gets updated.
 ## Configurable picker keymaps
 
 `<CR>` (insert without executing), `<Tab>` (toggle favorite), `<C-r>`
-(refresh), `<C-x>` (delete), `<C-t>` (tag), `<C-s>` (cycle source), `<C-z>`
-(undo favorite), `<C-Up>`/`<C-Down>` (reorder favorite) are all
+(refresh), `<C-x>` (delete), `<C-Space>` (mark for batch delete), `<C-t>`
+(tag), `<C-s>` (cycle source), `<C-z>` (undo favorite), `<C-Up>`/`<C-Down>`
+(reorder favorite) and `<C-g>` (lazygit, project picker) are all
 remappable or individually disableable via `setup({ mappings = {...} })`;
 `mappings.enabled = false` turns all of them off at once. A legend of
 the currently active ones is generated from `config.options.mappings`

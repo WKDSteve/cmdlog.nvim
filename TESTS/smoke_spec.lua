@@ -156,6 +156,27 @@ do
   if ok then check("bindings.catalog().usrcmds non-empty", #catalog.usrcmds > 0) end
 end
 
+-- ── picker_mappings catalog is documented everywhere ─────────────────────────
+do
+  local function read(rel)
+    local fh = io.open(root .. "/" .. rel, "rb")
+    if not fh then return "" end
+    local text = fh:read("a")
+    fh:close()
+    return text
+  end
+  local vimdoc = read("doc/cmdlog.txt")
+  local picker_md = read("docs/FEATURES/PICKER.md")
+  local defaults = require("cmdlog.config.DEFAULTS").mappings
+  for name in pairs(require("cmdlog.bindings.picker_mappings").catalog) do
+    local key = defaults[name]
+    if type(key) == "string" then
+      check("vimdoc names " .. key .. " for " .. name, vimdoc:find(key, 1, true) ~= nil)
+      check("PICKER.md names " .. key .. " for " .. name, picker_md:find(key, 1, true) ~= nil)
+    end
+  end
+end
+
 -- ── core.utils pure functions ───────────────────────────────────────────────
 do
   local utils = require("cmdlog.core.utils")
