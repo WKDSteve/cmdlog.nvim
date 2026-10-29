@@ -6,10 +6,6 @@
 
 local M = {}
 
---- CDX: incomplete -- `config.options.mappings` has 10 configurable keys
---- (toggle_selection, tag, cycle_source, undo_favorite, move_favorite_up/down
---- are missing here), and docs/BINDINGS.md says this file "mirrors" the full
---- picker-keymap table. `M.resolved()` feeds `bindings.catalog()`.
 ---@type table<string, {config_key: string, desc: string}>
 M.catalog = {
   select = {
@@ -23,7 +19,35 @@ M.catalog = {
   refresh = { config_key = "mappings.refresh", desc = "Refresh the current picker" },
   delete = {
     config_key = "mappings.delete",
-    desc = "Delete the selected entry from its underlying history",
+    desc = "Delete the selected entry (or every marked one) from its underlying history",
+  },
+  toggle_selection = {
+    config_key = "mappings.toggle_selection",
+    desc = "Mark/unmark an entry for a batch delete, then move down",
+  },
+  tag = {
+    config_key = "mappings.tag",
+    desc = "Tag the selected favorite (favorites picker only)",
+  },
+  cycle_source = {
+    config_key = "mappings.cycle_source",
+    desc = "Rotate to the next picker, keeping the prompt text (Telescope only)",
+  },
+  undo_favorite = {
+    config_key = "mappings.undo_favorite",
+    desc = "Undo the most recent favorite toggle",
+  },
+  move_favorite_up = {
+    config_key = "mappings.move_favorite_up",
+    desc = "Move the selected favorite up one slot (favorites picker only)",
+  },
+  move_favorite_down = {
+    config_key = "mappings.move_favorite_down",
+    desc = "Move the selected favorite down one slot (favorites picker only)",
+  },
+  lazygit = {
+    config_key = "mappings.lazygit",
+    desc = "Open lazygit for the project root (project picker only, needs gitsuite.nvim)",
   },
 }
 

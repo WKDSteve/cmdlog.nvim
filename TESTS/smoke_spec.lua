@@ -2335,6 +2335,30 @@ do
     picker_mappings.resolved().select.key == false
   )
   config.options.mappings.select = require("cmdlog.config.DEFAULTS").mappings.select
+
+  -- The catalog must cover every configurable key (all but the `enabled`
+  -- switch), so the two lists cannot drift apart again.
+  local missing, stale = {}, {}
+  for key in pairs(require("cmdlog.config.DEFAULTS").mappings) do
+    if key ~= "enabled" and not picker_mappings.catalog[key] then missing[#missing + 1] = key end
+  end
+  for name, entry in pairs(picker_mappings.catalog) do
+    if
+      require("cmdlog.config.DEFAULTS").mappings[name] == nil
+      or entry.config_key ~= "mappings." .. name
+      or type(entry.desc) ~= "string"
+      or entry.desc == ""
+    then
+      stale[#stale + 1] = name
+    end
+  end
+  table.sort(missing)
+  table.sort(stale)
+  check(
+    "picker_mappings.catalog: covers every configurable mappings key",
+    #missing == 0 and #stale == 0,
+    "missing: " .. table.concat(missing, ",") .. " stale: " .. table.concat(stale, ",")
+  )
 end
 
 -- ── bindings.catalog: aggregates every sub-catalog ──────────────────────────

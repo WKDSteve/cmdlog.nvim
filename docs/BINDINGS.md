@@ -69,6 +69,7 @@ tag, no delete, in any picker.
 | `<C-z>`   | `mappings.undo_favorite`   | Undo the most recent favorite toggle (single-level) |
 | `<C-Up>`  | `mappings.move_favorite_up`   | Move the selected favorite up one slot (favorites picker only) |
 | `<C-Down>`| `mappings.move_favorite_down` | Move the selected favorite down one slot (favorites picker only) |
+| `<C-g>`   | `mappings.lazygit`         | Open lazygit for the project root (project picker only; needs gitsuite.nvim) |
 
 ## Optional entry-point keymaps (which-key aware)
 
