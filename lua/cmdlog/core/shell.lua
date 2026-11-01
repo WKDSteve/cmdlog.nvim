@@ -242,6 +242,73 @@ function M.has_custom_parser()
   return custom_parser() ~= nil
 end
 
+---@class Cmdlog.ShellFormat
+---@field parse_line fun(line: string): string|nil  The command a raw history line holds, if any
+---@field matches fun(line: string, cmd: string): boolean  Whether a raw line parses to `cmd`
+
+---@internal
+---fish stores the command JSON-escaped; unescape it, keeping the raw text when
+---it does not decode.
+---@param raw string
+---@return string
+local function fish_decode(raw)
+  local okdec, dec = pcall(vim.fn.json_decode, '"' .. raw .. '"')
+  return okdec and dec or raw
+end
+
+--- One command per line with no extra syntax: what every plain-text history
+--- format degrades to. Better a picker with slightly noisy entries than an
+--- empty one, so this is also the fallback for an unknown or undetected shell
+--- (nushell and PSReadLine are exactly this).
+---@type Cmdlog.ShellFormat
+local PLAIN = {
+  parse_line = function(line)
+    if line ~= "" then return line end
+  end,
+  matches = function(line, cmd)
+    return line == cmd
+  end,
+}
+
+--- Parsing a history file and finding the raw line of a parsed command are two
+--- halves of one format, so they sit side by side here: `delete_entry` must
+--- mirror `get_shell_history` exactly, and one table keeps them in step.
+---@type table<string, Cmdlog.ShellFormat>
+local SHELLS = {
+  -- zsh extended history format: : 1609459200:0;command
+  zsh = {
+    parse_line = function(line)
+      return line:match(";%s*(.*)")
+    end,
+    matches = function(line, cmd)
+      return line:match(";%s*(.*)") == cmd
+    end,
+  },
+  -- plain lines, or with timestamps commented (#1609459200)
+  bash = {
+    parse_line = function(line)
+      if line ~= "" and not line:match("^#%d+") then return line end
+    end,
+    matches = PLAIN.matches,
+  },
+  -- fish YAML-ish entries: - cmd: '...'
+  fish = {
+    parse_line = function(line)
+      local raw = line:match("^%s*%- cmd:%s*(.*)")
+      if raw and raw ~= "" then return fish_decode(raw) end
+    end,
+    matches = function(line, cmd)
+      local raw = line:match("^%s*%- cmd:%s*(.*)")
+      if not raw then return false end
+      return fish_decode(raw) == cmd
+    end,
+  },
+  nu = PLAIN,
+  powershell = PLAIN,
+}
+SHELLS.ksh = SHELLS.bash
+SHELLS.csh = SHELLS.bash
+
 --- Every command read from the detected shell's history file, parsed per that
 --- shell's format (or via `shell_history.parse`, if configured).
 ---@return string[] history lines (commands)
@@ -293,49 +360,10 @@ function M.get_shell_history()
     return history
   end
 
-  -- Parse according to shell type
-  if shell == "zsh" then
-    -- zsh extended history format: : 1609459200:0;command
-    for _, line in ipairs(lines) do
-      local cmd = line:match(";%s*(.*)")
-      if cmd and cmd ~= "" then table.insert(history, cmd) end
-    end
-  elseif shell == "bash" or shell == "ksh" or shell == "csh" then
-    -- bash plain lines or with timestamps commented (#1609459200)
-    for _, line in ipairs(lines) do
-      if line ~= "" and not line:match("^#%d+") then table.insert(history, line) end
-    end
-  elseif shell == "fish" then
-    -- fish YAML-ish entries: - cmd: '...'
-    for _, line in ipairs(lines) do
-      local cmd = line:match("^%s*%- cmd:%s*(.*)")
-      if cmd and cmd ~= "" then
-        -- unescape using JSON decode trick to honor escape sequences
-        local okdec, dec = pcall(vim.fn.json_decode, '"' .. cmd .. '"')
-        if okdec and dec then
-          table.insert(history, dec)
-        else
-          table.insert(history, cmd)
-        end
-      end
-    end
-  elseif shell == "nu" then
-    -- nushell history is typically plain lines
-    for _, line in ipairs(lines) do
-      if line ~= "" then table.insert(history, line) end
-    end
-  elseif shell == "powershell" then
-    -- PSReadLine history file is plain one-command-per-line
-    for _, line in ipairs(lines) do
-      if line and line ~= "" then table.insert(history, line) end
-    end
-  else
-    -- Unknown or undetected shell: treat the file as one command per line,
-    -- which is what every plain-text history format degrades to. Better a
-    -- picker with slightly noisy entries than an empty one.
-    for _, line in ipairs(lines) do
-      if line and line ~= "" then table.insert(history, line) end
-    end
+  local fmt = SHELLS[shell] or PLAIN
+  for _, line in ipairs(lines) do
+    local cmd = fmt.parse_line(line)
+    if cmd and cmd ~= "" then table.insert(history, cmd) end
   end
 
   return history
@@ -356,18 +384,7 @@ local function line_matches_command(shell, line, cmd)
     return ok and matched == true
   end
 
-  if shell == "zsh" then
-    return line:match(";%s*(.*)") == cmd
-  elseif shell == "fish" then
-    local raw = line:match("^%s*%- cmd:%s*(.*)")
-    if not raw then return false end
-    local okdec, dec = pcall(vim.fn.json_decode, '"' .. raw .. '"')
-    return (okdec and dec or raw) == cmd
-  else
-    -- bash, ksh, csh, nu, powershell, and the unknown-shell fallback all
-    -- store one command per line with no extra syntax.
-    return line == cmd
-  end
+  return (SHELLS[shell] or PLAIN).matches(line, cmd)
 end
 
 --- Deletes every occurrence of `cmd` from the detected shell's history file.

@@ -581,6 +581,86 @@ do
   config.options.shell_history = {}
 end
 
+-- ── core.shell: one SHELLS table keeps parse and delete matching in step ───
+--
+-- get_shell_history() parses a raw line to a command; delete_entry() must find
+-- the raw line a parsed command came from. They are two halves of one format,
+-- kept in a single per-shell table, so every shell must round-trip: each
+-- parsed command matches its own raw line and no other.
+do
+  local config = require("cmdlog.config")
+  local shell = require("cmdlog.core.shell")
+  local saved_shell = vim.env.SHELL
+  local saved_opts =
+    { path = config.options.shell_history_path, hist = config.options.shell_history }
+  config.options.shell_history = {}
+
+  local formats = {
+    zsh = {
+      raw = { ": 1609459200:0;git status", ": 1609459201:0;ls -la" },
+      want = { "git status", "ls -la" },
+    },
+    bash = { raw = { "#1609459200", "git status", "ls -la" }, want = { "git status", "ls -la" } },
+    ksh = { raw = { "#1609459200", "git status" }, want = { "git status" } },
+    fish = {
+      raw = { "- cmd: git status", "  when: 1609459200", '- cmd: echo \\"hi\\"' },
+      want = { "git status", 'echo "hi"' },
+    },
+    nu = { raw = { "git status", "", "ls -la" }, want = { "git status", "ls -la" } },
+    powershell = { raw = { "git status", "ls -la" }, want = { "git status", "ls -la" } },
+  }
+  local names = vim.tbl_keys(formats)
+  table.sort(names)
+  for _, name in ipairs(names) do
+    local fmt = formats[name]
+    local file = vim.fn.tempname() .. "-cmdlog-" .. name
+    vim.fn.writefile(fmt.raw, file)
+    config.options.shell_history_path = file
+    vim.fn.setenv("SHELL", "/bin/" .. name)
+
+    check(
+      "shell format " .. name .. ": parses to the commands",
+      vim.deep_equal(shell.get_shell_history(), fmt.want),
+      vim.inspect(shell.get_shell_history())
+    )
+
+    -- delete_entry removes exactly the line of the first command
+    local done
+    shell.delete_entry(fmt.want[1], { skip_confirm = true }, function(ok)
+      done = ok
+    end)
+    local left = shell.get_shell_history()
+    check(
+      "shell format " .. name .. ": delete_entry removes only the matching command",
+      done == true and not vim.tbl_contains(left, fmt.want[1]) and #left == #fmt.want - 1,
+      vim.inspect(left)
+    )
+    vim.fn.delete(file)
+  end
+
+  -- An unknown shell falls back to one command per line.
+  local unknown = vim.fn.tempname() .. "-cmdlog-unknown"
+  vim.fn.writefile({ "alpha", "", "beta" }, unknown)
+  config.options.shell_history_path = unknown
+  vim.fn.setenv("SHELL", "/bin/whatsh")
+  check(
+    "shell format unknown: one command per line",
+    vim.deep_equal(shell.get_shell_history(), { "alpha", "beta" })
+  )
+  vim.fn.delete(unknown)
+
+  -- One table, not two parallel if/elseif chains.
+  local src = table.concat(vim.fn.readfile(root .. "/lua/cmdlog/core/shell.lua"), "\n")
+  check(
+    "core.shell: formats live in one SHELLS table",
+    src:find("local SHELLS", 1, true) ~= nil and not src:find('shell == "zsh"', 1, true)
+  )
+
+  vim.fn.setenv("SHELL", saved_shell or vim.NIL)
+  config.options.shell_history_path = saved_opts.path
+  config.options.shell_history = saved_opts.hist
+end
+
 -- ── delete_fn contract: every picker source honours (cmd, on_done, opts) ───
 --
 -- Regression: the mappings call delete_fn(cmd, on_done, opts), but
