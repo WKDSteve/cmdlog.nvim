@@ -121,14 +121,17 @@ done
 [[ -f "$DRIVER" ]] || fail "error: the runner entry is missing: $DRIVER"
 
 # Throwaway app name: the run gets its own stdpath("config"/"data"/"state"), never the developer's.
-# `ci`: the pipeline's document (ci.json) and the suite's stamp must land in the developer's real state directory,
-# where `testing ci verify`, the pre-push hook and `:Testing ci status` read them. It is asked for BEFORE the throwaway
-# app name and the scratch directory below and handed to `testing ci --state-dir` (an argument, not the environment:
-# the specs must not inherit it).
+# `ci` and the plain run: the pipeline's document (ci.json), the suite's stamp and the run history (runs.jsonl) must
+# land in the developer's real state directory, where `testing ci verify`, the pre-push hook, `:Testing ci status` and
+# the editor's test explorer read them. It is asked for BEFORE the throwaway app name and the scratch directory below
+# and handed to `testing ci --state-dir` / `testing run --state-dir` (an argument, not the environment: the specs
+# must not inherit it).
 real_state=""
-if [[ "${1:-}" == "ci" ]]; then
+if [[ "${1:-}" != "surface" && "${1:-}" != "conformance" ]]; then
   real_state="$(nvim -n -i NONE --headless -u NONE --cmd 'lua io.stdout:write(vim.fn.stdpath("state"))' --cmd 'qa!' 2>/dev/null)" || real_state=""
-  [[ -n "$real_state" ]] || fail 'error: cannot ask nvim for stdpath("state"); the ci document would be lost.'
+  if [[ "${1:-}" == "ci" ]]; then
+    [[ -n "$real_state" ]] || fail 'error: cannot ask nvim for stdpath("state"); the ci document would be lost.'
+  fi
 fi
 
 # Always this name: an NVIM_APPNAME the developer exported (a second config) would make the run read and write that
@@ -151,7 +154,7 @@ if [ "${1:-}" = "surface" ]; then
   nvim -n -i NONE --headless -u NONE -l "$DRIVER" surface . "$@"
   exit $?
 fi
-# `scripts/test.sh conformance`: the conformance suite K1..K15 in the same environment (docs/CONFORMANCE.md of testing.nvim)
+# `scripts/test.sh conformance`: the conformance suite K1..K16 in the same environment (docs/CONFORMANCE.md of testing.nvim)
 if [ "${1:-}" = "conformance" ]; then
   shift
   nvim -n -i NONE --headless -u NONE -l "$DRIVER" conformance . "$@"
@@ -174,4 +177,6 @@ if [ "${1:-}" = "ci" ]; then
   nvim -n -i NONE --headless -u NONE -l "$DRIVER" ci ${ci_args[@]+"${ci_args[@]}"} "$@"
   exit $?
 fi
+# the real state directory goes first, an `--state-dir` of the caller after it wins
+[[ -z "$real_state" ]] || set -- --state-dir "$real_state" "$@"
 nvim -n -i NONE --headless -u NONE -l "$DRIVER" run . "$@"
