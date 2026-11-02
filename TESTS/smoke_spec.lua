@@ -231,7 +231,7 @@ if not pcall(require, "telescope.pickers") then
   skipped = skipped + 1
 else
   local config = require("cmdlog.config")
-  local errors = require("cmdlog.core.errors")
+  local errors
   local picker_utils = require("cmdlog.ui.picker_utils")
   local pickers = require("telescope.pickers")
   local finders = require("telescope.finders")
@@ -1683,6 +1683,7 @@ do
   kit_confirm.open = original_open
   kit_confirm.open({
     question = "blocker",
+    default = 1, -- the safe button is the default now; this one drives Yes
     on_answer = function(yes)
       blocker_answer = yes
     end,
@@ -2212,7 +2213,7 @@ end
 -- v:errmsg -- verified empirically before writing this suite.
 do
   local config = require("cmdlog.config")
-  local tracker = require("cmdlog.core.tracker")
+  local tracker
   local autocmd = require("lib.nvim.bindings.autocmd")
   local project_history = require("cmdlog.core.project_history")
   local stats = require("cmdlog.core.stats")
@@ -3062,7 +3063,7 @@ else
   -- wiring is exercised end to end.
   do
     local config = require("cmdlog.config")
-    local favorites = require("cmdlog.core.favorites")
+    local favorites
     local fav_path = vim.fn.tempname() .. "-cmdlog-mapping-favs.json"
     config.options.favorites_path = fav_path
     package.loaded["cmdlog.core.favorites"] = nil
