@@ -29,6 +29,15 @@ is missing. plenary.nvim is only on the list because telescope.nvim needs it; it
 is not a test runner here. The plain `nvim -l TESTS/smoke_spec.lua` still works
 and bootstraps its own `runtimepath` from the file location.
 
+## Test sheets
+
+`TESTS/sheets/*.sheet.lua` are the live checks of the manual checklist, written down as data
+([testing.nvim's SHEETS.md](https://github.com/WKDSteve/testing.nvim/blob/main/docs/SHEETS.md)) and
+run by `sheets_spec.lua` (dialect `busted`, one case `sheet:<id>` per sheet): the real `:Cmdlog`
+command typed into a child editor, the real Telescope, all state in a throwaway directory
+(`sheets/_helpers.lua`). Only `gitsuite.features.ui` is a recording stand-in. What a sheet cannot
+do stands in its `manual` list.
+
 ## Coverage
 
 Everything lives in `smoke_spec.lua`, one commented suite per area. It opens

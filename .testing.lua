@@ -32,7 +32,8 @@ return {
   guard_allow = {
     fs = {},
     spawn = {
-      -- smoke_spec.lua really runs the headless Neovim of the :help preview.
+      -- smoke_spec.lua really runs the headless Neovim of the :help preview; sheets_spec.lua runs
+      -- every test sheet (TESTS/sheets/) in a child editor.
       "nvim",
     },
     network = {},
