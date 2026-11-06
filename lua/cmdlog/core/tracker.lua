@@ -46,9 +46,10 @@ function M.setup()
 
   augroup = autocmd.group("cmdlog_tracker", true)
 
-  autocmd.create("CmdlineLeave", function(args)
+  autocmd.create("CmdlineLeave", function()
     if vim.fn.getcmdtype() ~= ":" then return end
-    if args.data and args.data.abort then return end
+    -- `v:event`, not the callback's args: a CmdlineLeave autocmd gets no `data`.
+    if vim.v.event.abort then return end
 
     local cmd = vim.fn.getcmdline()
     if not cmd or cmd == "" then return end

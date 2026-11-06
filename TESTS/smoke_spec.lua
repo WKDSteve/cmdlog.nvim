@@ -2278,6 +2278,21 @@ do
     tostring(after_second)
   )
 
+  -- A command line left with <Esc> never ran, so it must not reach the stores. The picker's
+  -- <CR> hands every entry to the command line for review, and backing out of that is the
+  -- whole point: the abort flag is in v:event, an autocmd's args carry no such thing.
+  recorded = {}
+  vim.api.nvim_feedkeys(
+    vim.api.nvim_replace_termcodes(":let g:cmdlog_aborted = 1<Esc>", true, false, true),
+    -- "t": only a typed <Esc> aborts, one from a macro or a mapping executes (`:h c_<Esc>`)
+    "xt",
+    false
+  )
+  vim.wait(100, function()
+    return #recorded > 0
+  end, 10)
+  check("tracker: an aborted command line is not recorded", #recorded == 0, vim.inspect(recorded))
+
   fire("echo 1")
   check(
     "tracker: a plain command reaches both project_history and stats",
