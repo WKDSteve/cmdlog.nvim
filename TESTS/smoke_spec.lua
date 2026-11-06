@@ -2891,6 +2891,19 @@ else
         and vim.tbl_contains(captured_job.args, "--headless"),
       vim.inspect(captured_job)
     )
+
+    -- The command itself, really run: `:help` opens a split in a read-only buffer, so writing
+    -- into it stopped the chain before its `quit`, and every hover left a headless Neovim behind
+    -- without ever showing a page. The timeout is what such a run ends with.
+    local argv = { captured_job.command }
+    vim.list_extend(argv, captured_job.args)
+    local run = vim.system(argv, { text = true, timeout = 15000 }):wait()
+    check(":help preview: the headless Neovim ends by itself", run.code == 0, vim.inspect(run))
+    check(
+      ":help preview: stdout holds the page",
+      (run.stdout or ""):find("vim.lsp", 1, true) ~= nil,
+      vim.inspect(run)
+    )
   end
 
   do
