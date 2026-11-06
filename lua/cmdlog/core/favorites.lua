@@ -93,8 +93,7 @@ function M.load()
     -- replaces a corrupt favorites.json with a single-entry list -- every
     -- hand-curated favorite gone with no trace it ever existed. Back up the
     -- original bytes once so that loss stays recoverable.
-    local backup_path = target .. ".corrupt"
-    if not is_readable_file(backup_path) then write_to_file(backup_path, content) end
+    local backup_path = require("cmdlog.core.store").backup_corrupt(target, content)
     notify.error(
       ("Favorites file '%s' is corrupt; original kept at '%s'"):format(target, backup_path)
     )

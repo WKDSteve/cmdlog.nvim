@@ -15,6 +15,24 @@ local notify = require("lib.nvim.notify.safe").create_safe("[cmdlog.nvim.store]"
 
 local M = {}
 
+--- Keep the bytes of a file that failed to load as `<target>.corrupt`, once: a backup that is
+--- there already holds the first original and stays. Not `fs.write.to_file`, which completes a
+--- missing final newline: this copy promises the original bytes.
+---@param target string  the expanded path of the corrupt file
+---@param content string
+---@return string backup_path
+function M.backup_corrupt(target, content)
+  local backup_path = target .. ".corrupt"
+  if not is_readable_file(backup_path) then
+    local f = io.open(backup_path, "wb")
+    if f then
+      f:write(content)
+      f:close()
+    end
+  end
+  return backup_path
+end
+
 --- Load a JSON file from disk.
 ---
 --- `err` distinguishes "nothing to load" (file missing or empty -- `default`
@@ -71,8 +89,7 @@ function M.load_json(path, default, validate)
   end
 
   if reason then
-    local backup_path = target .. ".corrupt"
-    if not is_readable_file(backup_path) then write_to_file(backup_path, content) end
+    local backup_path = M.backup_corrupt(target, content)
     notify.error(("'%s' is %s; original kept at '%s'"):format(target, reason, backup_path))
     return default, reason .. ": original kept at " .. backup_path
   end

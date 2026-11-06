@@ -1096,6 +1096,45 @@ do
   vim.fn.delete(path .. ".corrupt")
 end
 
+-- ── the .corrupt backup is byte-exact, in both places that write one ───────
+-- `fs.write.to_file` completes a missing final newline, which is right for a file cmdlog writes
+-- and wrong for a copy that promises the original bytes.
+do
+  local config = require("cmdlog.config")
+  local function raw(path, content)
+    local f = assert(io.open(path, content and "wb" or "rb"))
+    local out = content and f:write(content) or f:read("*a")
+    f:close()
+    return out
+  end
+
+  local stored = vim.fn.tempname() .. "-cmdlog-bytes.json"
+  raw(stored, "{no newline at the end")
+  require("cmdlog.core.store").load_json(stored, {})
+  check(
+    "store.load_json: the backup holds the original bytes exactly",
+    raw(stored .. ".corrupt") == "{no newline at the end",
+    vim.inspect(raw(stored .. ".corrupt"))
+  )
+
+  local fav = vim.fn.tempname() .. "-cmdlog-favBytes.json"
+  config.options.favorites_path = fav
+  config.options.project_scoped = { enabled = false }
+  raw(fav, "{no newline at the end")
+  package.loaded["cmdlog.core.favorites"] = nil
+  require("cmdlog.core.favorites").load()
+  check(
+    "favorites.load: the backup holds the original bytes exactly",
+    raw(fav .. ".corrupt") == "{no newline at the end",
+    vim.inspect(raw(fav .. ".corrupt"))
+  )
+
+  vim.fn.delete(stored)
+  vim.fn.delete(stored .. ".corrupt")
+  vim.fn.delete(fav)
+  vim.fn.delete(fav .. ".corrupt")
+end
+
 -- ── core.favorites: undo_last_toggle (single-level) ─────────────────────────
 do
   local config = require("cmdlog.config")
