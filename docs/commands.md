@@ -26,7 +26,8 @@ Shows only Neovim `:`-history, deduplicated (most recent occurrence kept).
 
 ## `:Cmdlog nvim-full`
 
-Shows the full Neovim `:`-history, including duplicates.
+Shows the full Neovim `:`-history, nothing filtered. Neovim itself keeps one
+entry per command, so a repeat only shows up through `extra_files.history`.
 
 ## `:Cmdlog shell`
 

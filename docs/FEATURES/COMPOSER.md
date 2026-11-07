@@ -26,7 +26,7 @@ entry's zero-arg picker function, so they're kept out of the list that
 - *(bare)* `:Cmdlog` — favorites + history combined, deduplicated
 - `:Cmdlog full` — all commands, including duplicates
 - `:Cmdlog nvim` — Neovim `:`-command history, deduplicated
-- `:Cmdlog nvim-full` — Neovim `:`-command history, including duplicates
+- `:Cmdlog nvim-full` — Neovim `:`-command history, nothing filtered
 - `:Cmdlog shell` — shell command history, deduplicated
 - `:Cmdlog shell-full` — shell command history, including duplicates
 - `:Cmdlog favorites` — favorited commands

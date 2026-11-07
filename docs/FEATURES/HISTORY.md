@@ -19,7 +19,7 @@ shows) via a Telescope or fzf-lua picker.
   real bug: the first never invoked the callback, leaving the picker open on
   a stale list, and the second raised
   `attempt to call local 'on_done' (a nil value)`.
-- **Usercmds:** `:Cmdlog nvim` (deduplicated), `:Cmdlog nvim-full` (with duplicates) — see [COMPOSER.md](./COMPOSER.md)
+- **Usercmds:** `:Cmdlog nvim` (deduplicated), `:Cmdlog nvim-full` (nothing filtered; Neovim itself keeps one entry per command) — see [COMPOSER.md](./COMPOSER.md)
 
 ## Shell history integration
 

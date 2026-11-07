@@ -20,7 +20,7 @@ as a single `:Cmdlog [subcommand]` verb, built via
 | `:Cmdlog`               | Combines favorites and history, showing only unique commands (no duplicates) |
 | `:Cmdlog full`          | Combines favorites and full history, allowing duplicates                     |
 | `:Cmdlog nvim`          | Shows only unique Neovim (`:`) commands (latest occurrence kept)             |
-| `:Cmdlog nvim-full`     | Shows full Neovim (`:`) history, including duplicates                        |
+| `:Cmdlog nvim-full`     | Shows full Neovim (`:`) history, nothing filtered                            |
 | `:Cmdlog shell`         | Shows unique shell history (latest occurrence kept)                          |
 | `:Cmdlog shell-full`    | Shows full shell history, including duplicates                               |
 | `:Cmdlog favorites`     | Shows commands you've marked as favorites                                    |

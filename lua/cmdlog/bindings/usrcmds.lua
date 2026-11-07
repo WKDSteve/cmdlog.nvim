@@ -37,7 +37,7 @@ M.catalog = {
   },
   {
     path = "nvim-full",
-    desc = "Neovim command-line history, including duplicates",
+    desc = "Neovim command-line history, nothing filtered",
     module = "cmdlog.ui.history_picker",
     fn = "show_history_picker",
   },
