@@ -2795,6 +2795,37 @@ do
       tostring(allowed)
     )
 
+    -- The one-liners themselves, really run as fzf-lua runs them. The old chain
+    -- `redir | help x | redir END | quit` printed nothing (a help page is no message) and
+    -- `quit` closed only the help split, `| redir END | quit` after `:lua` was Lua: both left
+    -- a Neovim running on every hover. The timeout is what such a run ends with.
+    local function run_sh(line)
+      return vim.system({ "sh", "-c", line }, { text = true, timeout = 15000 }):wait()
+    end
+    local help_run = run_sh(previewer(":help vim.lsp", nil))
+    check(
+      "fzf-previewer: the :help one-liner ends by itself",
+      help_run.code == 0,
+      vim.inspect(help_run)
+    )
+    check(
+      "fzf-previewer: the :help one-liner prints the page",
+      (help_run.stdout or ""):find("vim.lsp", 1, true) ~= nil
+        and (help_run.stdout or ""):find("\n", 1, true) ~= nil,
+      vim.inspect(help_run)
+    )
+    local lua_run = run_sh(previewer(":lua print(40 + 2)", nil))
+    check(
+      "fzf-previewer: the :lua one-liner ends by itself",
+      lua_run.code == 0,
+      vim.inspect(lua_run)
+    )
+    check(
+      "fzf-previewer: the :lua one-liner prints what the chunk printed",
+      (lua_run.stdout or ""):find("42", 1, true) ~= nil,
+      vim.inspect(lua_run)
+    )
+
     local unsafe = previewer(":help 'shiftwidth'", nil)
     check(
       "fzf-previewer: a shell-unsafe argument (quote) is refused with an explanation, not run",

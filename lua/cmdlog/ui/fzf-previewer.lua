@@ -10,8 +10,8 @@
 --- What may be previewed how is that module's decision, not this one's: a
 --- preview reads, it does not run. See it for why.
 ---
---- The `:edit` branch shells out to `head`, which is POSIX-only, as is the
---- pipe-to-redir one-liner the other branches need. Rather than emit a broken
+--- The `:edit` branch shells out to `head`, which is POSIX-only, as are the
+--- redirects and `tail` the other branches need. Rather than emit a broken
 --- preview command on Windows, this returns nil there (fzf-lua's "no preview"
 --- state). The Telescope previewer (cmdlog.ui.telescope-previewer) reads the
 --- file in-process and works everywhere.
@@ -21,19 +21,61 @@ local policy = require("cmdlog.ui.preview_policy")
 local M = {}
 
 ---@internal
----A shell one-liner that renders `vim_cmd` in a throwaway Neovim and prints
----the result. The redirect goes to a `tempname()` file (removed at the end),
----not a fixed name in the cwd.
----@param label string   shown above the output
----@param vim_cmd string already validated by preview_policy
+---`nvim` and `argv` as shell words, each one escaped.
+---@param argv string[]
 ---@return string
-local function via_headless_nvim(label, vim_cmd)
-  local out = vim.fn.tempname()
-  return string.format(
-    "echo %s; nvim -u NONE -c 'redir! > %s | %s | redir END | quit' >/dev/null 2>&1; tail -n 50 %s; rm -f %s",
+local function nvim_words(argv)
+  local words = { "nvim" }
+  for _, arg in ipairs(argv) do
+    words[#words + 1] = vim.fn.shellescape(arg)
+  end
+  return table.concat(words, " ")
+end
+
+---@internal
+---A shell one-liner that prints the `:help` page of `topic` from a throwaway
+---Neovim that ends by itself (`preview_policy.help_argv`, the same run as the
+---Telescope previewer's).
+---@param label string  shown above the page
+---@param topic string  already validated by preview_policy
+---@return string
+local function help_page(label, topic)
+  return ("echo %s; %s 2>/dev/null </dev/null"):format(
     vim.fn.shellescape(label),
-    vim.fn.shellescape(out),
-    vim_cmd,
+    nvim_words(policy.help_argv(topic))
+  )
+end
+
+---@internal
+---A shell one-liner that runs `:lua {expr}` in a throwaway Neovim and prints
+---its messages. Separate `-c`s: `:lua` takes a `|` as part of its chunk, so a
+---chained `| redir END | quit` would be Lua, and the process would never end.
+---The redirect goes to a `tempname()` file (removed at the end), not a fixed
+---name in the cwd.
+---@param label string  shown above the output
+---@param expr string   already validated by preview_policy
+---@return string
+local function lua_messages(label, expr)
+  local out = vim.fn.tempname()
+  local argv = {
+    "--headless",
+    "-n",
+    "-i",
+    "NONE",
+    "-u",
+    "NONE",
+    "-c",
+    "redir! > " .. vim.fn.fnameescape(out),
+    "-c",
+    "lua " .. expr,
+    "-c",
+    "redir END",
+    "-c",
+    "qa!",
+  }
+  return ("echo %s; %s >/dev/null 2>&1 </dev/null; tail -n 50 %s; rm -f %s"):format(
+    vim.fn.shellescape(label),
+    nvim_words(argv),
     vim.fn.shellescape(out),
     vim.fn.shellescape(out)
   )
@@ -81,11 +123,9 @@ function M.command_previewer()
         .. vim.fn.shellescape("Not previewed: the argument would end the quoted command.")
     end
 
-    if plan.kind == "help" then
-      return via_headless_nvim(":help " .. plan.arg, "help " .. plan.arg)
-    end
+    if plan.kind == "help" then return help_page(":help " .. plan.arg, plan.arg) end
 
-    if plan.kind == "lua" then return via_headless_nvim(":lua " .. plan.arg, "lua " .. plan.arg) end
+    if plan.kind == "lua" then return lua_messages(":lua " .. plan.arg, plan.arg) end
 
     -- `:terminal` and `:!` have no read-only rendering: previewing them is
     -- running them. The Telescope previewer can stream that into a buffer;

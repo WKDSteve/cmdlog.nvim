@@ -12,10 +12,6 @@ local vim = vim
 
 local M = {}
 
---- What the headless Neovim of a `:help` preview runs once the page is open.
-local HELP_PAGE_TO_STDOUT = "lua local top = vim.fn.line('.') - 1; "
-  .. "io.stdout:write(table.concat(vim.api.nvim_buf_get_lines(0, top, top + 200, false), '\\n'))"
-
 ---@internal
 ---Replace the preview buffer's contents, if it is still around. A preview
 ---buffer outlives neither a fast cursor nor a closed picker, and the async
@@ -95,26 +91,7 @@ function M.command_previewer()
       render(bufnr, {})
 
       if plan.kind == "help" then
-        stream(bufnr, {
-          command = "nvim",
-          -- Separate `-c`s: an unknown topic fails its own command and the last one still ends the
-          -- process. `:help` opens a read-only split, so the page is read out of that buffer, from
-          -- the tag on, and a bounded part of it: this runs on every cursor move.
-          args = {
-            "--headless",
-            "-n",
-            "-i",
-            "NONE",
-            "-u",
-            "NONE",
-            "-c",
-            "help " .. plan.arg,
-            "-c",
-            HELP_PAGE_TO_STDOUT,
-            "-c",
-            "qa!",
-          },
-        })
+        stream(bufnr, { command = "nvim", args = policy.help_argv(plan.arg) })
         return
       end
 

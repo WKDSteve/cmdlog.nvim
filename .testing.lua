@@ -38,6 +38,8 @@ return {
       -- smoke_spec.lua really runs the headless Neovim of the :help preview; sheets_spec.lua runs
       -- every test sheet (TESTS/sheets/) in a child editor.
       "nvim",
+      -- smoke_spec.lua runs the fzf-lua previewer's shell one-liners as fzf-lua does (not on Windows).
+      "sh",
     },
     network = {},
   },

@@ -67,6 +67,34 @@ function M.shell_arg_is_safe(arg)
   return M.topic_is_safe(arg) and arg:find(SHELL_FORBIDDEN) == nil
 end
 
+--- What the headless Neovim of a `:help` preview runs once the page is open. `:help` opens a
+--- read-only split, so the page is read out of that buffer, from the tag on, and a bounded part
+--- of it: a preview runs on every cursor move.
+local HELP_PAGE_TO_STDOUT = "lua local top = vim.fn.line('.') - 1; "
+  .. "io.stdout:write(table.concat(vim.api.nvim_buf_get_lines(0, top, top + 200, false), '\\n'))"
+
+---The arguments (after `nvim`) of a throwaway Neovim that writes the `:help` page of `topic` to
+---stdout and ends. Both previewers run it, Telescope as argv, fzf-lua through a shell. Separate
+---`-c`s: an unknown topic fails its own command and the last one still ends the process.
+---@param topic string  validated by `topic_is_safe`
+---@return string[]
+function M.help_argv(topic)
+  return {
+    "--headless",
+    "-n",
+    "-i",
+    "NONE",
+    "-u",
+    "NONE",
+    "-c",
+    "help " .. topic,
+    "-c",
+    HELP_PAGE_TO_STDOUT,
+    "-c",
+    "qa!",
+  }
+end
+
 ---@internal
 ---Classify `cmd` without deciding anything about permission.
 ---@param cmd string
