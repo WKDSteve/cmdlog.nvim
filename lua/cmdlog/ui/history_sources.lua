@@ -8,7 +8,8 @@ local favorites = require("cmdlog.core.favorites")
 local history_mod = require("cmdlog.core.history")
 local shell_mod = require("cmdlog.core.shell")
 local extra_files = require("cmdlog.core.extra_files")
-local process_list = require("cmdlog.core.utils").process_list
+local utils = require("cmdlog.core.utils")
+local process_list = utils.process_list
 local picker_utils = require("cmdlog.ui.picker_utils")
 local cycle = require("cmdlog.ui.cycle")
 
@@ -98,16 +99,7 @@ function M.single(spec)
     if source.extras then combined = vim.list_extend(combined, source.extras()) end
     -- A favorite sits in its own block on top: `unique` means it does not come
     -- back further down, and neither does an extra-file entry the history holds.
-    if spec.unique then
-      local seen, kept = {}, {}
-      for _, entry in ipairs(combined) do
-        if not seen[entry] then
-          seen[entry] = true
-          kept[#kept + 1] = entry
-        end
-      end
-      combined = kept
-    end
+    if spec.unique then combined = utils.deduplicate_list(combined) end
 
     local mappings = require("cmdlog.ui.mappings")(show, source.delete)
     picker_utils.open_picker(combined, favs, {
