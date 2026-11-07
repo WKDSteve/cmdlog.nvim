@@ -20,6 +20,9 @@ return {
   -- Environment variables the specs read; a child editor inherits an allowlist only (never secrets).
   env_allow = { "LIB_NVIM_PATH", "REPOS_DIR" },
   -- Guards (docs/GUARDS.md). Strict, so that a new finding turns the run red.
+  -- sheets_spec.lua runs every test sheet in a child editor of its own: far more than the default 10 s and 60 s
+  -- on a machine under load.
+  timeouts = { case_ms = 30000, file_ms = 300000 },
   guards = {
     fs = "error",
     state = "error",
