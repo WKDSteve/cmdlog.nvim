@@ -96,6 +96,18 @@ function M.single(spec)
 
     local combined = vim.list_extend(vim.deepcopy(favs), entries)
     if source.extras then combined = vim.list_extend(combined, source.extras()) end
+    -- A favorite sits in its own block on top: `unique` means it does not come
+    -- back further down, and neither does an extra-file entry the history holds.
+    if spec.unique then
+      local seen, kept = {}, {}
+      for _, entry in ipairs(combined) do
+        if not seen[entry] then
+          seen[entry] = true
+          kept[#kept + 1] = entry
+        end
+      end
+      combined = kept
+    end
 
     local mappings = require("cmdlog.ui.mappings")(show, source.delete)
     picker_utils.open_picker(combined, favs, {
