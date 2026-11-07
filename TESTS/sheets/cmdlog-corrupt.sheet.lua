@@ -3,7 +3,7 @@
 return {
   id = "cmdlog.corrupt",
   title = "cmdlog.nvim: corrupt favorites, stats and errors are backed up once and nothing breaks",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },

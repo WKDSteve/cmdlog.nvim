@@ -94,7 +94,7 @@ add({
 return {
   id = "cmdlog.config",
   title = "cmdlog.nvim: unknown keys and bad values are reported once and the defaults stay",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },

@@ -58,7 +58,7 @@ end
 return {
   id = "cmdlog.preview-execute",
   title = "cmdlog.nvim: preview_execute renders help and Lua, a risky entry and a bar stay refused",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },

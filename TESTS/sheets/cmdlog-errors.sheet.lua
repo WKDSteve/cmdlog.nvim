@@ -3,7 +3,7 @@
 return {
   id = "cmdlog.errors",
   title = "cmdlog.nvim: a typed command that failed is marked with a cross",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },

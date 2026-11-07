@@ -46,7 +46,7 @@ steps[#steps + 1] = { wait = "not _G.P()" }
 return {
   id = "cmdlog.cycle",
   title = "cmdlog.nvim: <C-s> rotates through the four pickers and keeps the prompt text",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },

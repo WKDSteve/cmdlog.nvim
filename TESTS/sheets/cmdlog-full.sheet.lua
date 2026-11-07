@@ -41,7 +41,7 @@ end
 return {
   id = "cmdlog.full",
   title = "cmdlog.nvim: nvim, shell and bare :Cmdlog dedup, their full variants keep duplicates",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },

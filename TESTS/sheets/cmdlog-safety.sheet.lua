@@ -14,7 +14,7 @@ end)()]]
 return {
   id = "cmdlog.safety",
   title = "cmdlog.nvim: risky commands are flagged, secrets never reach cmdlog's own stores",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },

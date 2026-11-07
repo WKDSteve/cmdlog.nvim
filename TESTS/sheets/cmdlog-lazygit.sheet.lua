@@ -5,7 +5,7 @@
 return {
   id = "cmdlog.lazygit",
   title = "cmdlog.nvim: <C-g> opens lazygit for the repo root, only in the project picker, a notify without gitsuite",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },

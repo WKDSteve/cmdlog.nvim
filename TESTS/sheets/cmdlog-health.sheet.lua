@@ -4,7 +4,7 @@
 return {
   id = "cmdlog.health",
   title = "cmdlog.nvim: :checkhealth names Neovim, lib.nvim, the picker, the options and the shell history",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },

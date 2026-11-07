@@ -151,7 +151,7 @@ add({
 return {
   id = "cmdlog.favorites",
   title = "cmdlog.nvim: favorites toggled, tagged, undone, reordered, exported and imported",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },

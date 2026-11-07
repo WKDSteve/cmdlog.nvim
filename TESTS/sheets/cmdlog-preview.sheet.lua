@@ -74,7 +74,7 @@ end
 return {
   id = "cmdlog.preview",
   title = "cmdlog.nvim: previews show files and run nothing (preview_execute off, the default)",
-  task = "cmdlog.nvim/testblatt-bindings-checkliste",
+  task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {
     { lua = [[pcall(require, "telescope")]], reason = "telescope.nvim is not on the runtimepath" },
