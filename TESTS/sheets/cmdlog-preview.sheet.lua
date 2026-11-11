@@ -73,6 +73,7 @@ end
 
 return {
   id = "cmdlog.preview",
+  feature = "cmdlog.preview",
   title = "cmdlog.nvim: previews show files and run nothing (preview_execute off, the default)",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

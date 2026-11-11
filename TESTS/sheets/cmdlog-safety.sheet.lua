@@ -13,6 +13,7 @@ end)()]]
 
 return {
   id = "cmdlog.safety",
+  feature = "cmdlog.safety",
   title = "cmdlog.nvim: risky commands are flagged, secrets never reach cmdlog's own stores",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

@@ -3,6 +3,7 @@
 -- commands are really typed, so what the pickers show went through the CmdlineLeave tracker.
 return {
   id = "cmdlog.derived",
+  feature = "cmdlog.derived",
   title = "cmdlog.nvim: :Cmdlog project is per repository, stats counts, lua filters",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

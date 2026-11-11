@@ -4,6 +4,7 @@ local SOURCE = [[_G.get("extra.txt") == "from extra\nalso extra\n"]]
 
 return {
   id = "cmdlog.optin",
+  feature = "cmdlog.opt-in-files",
   title = "cmdlog.nvim: extra_files are read-only rows, project_scoped falls back to the global file",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

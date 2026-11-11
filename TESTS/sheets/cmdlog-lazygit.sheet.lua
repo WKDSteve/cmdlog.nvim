@@ -4,6 +4,7 @@
 -- `gitsuite.features.ui` (the float and the lazygit binary stay for a person).
 return {
   id = "cmdlog.lazygit",
+  feature = "cmdlog.lazygit",
   title = "cmdlog.nvim: <C-g> opens lazygit for the repo root, only in the project picker, a notify without gitsuite",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

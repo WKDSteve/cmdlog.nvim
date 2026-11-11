@@ -40,6 +40,7 @@ end
 
 return {
   id = "cmdlog.full",
+  feature = "cmdlog.full",
   title = "cmdlog.nvim: nvim, shell and bare :Cmdlog dedup, their full variants keep duplicates",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

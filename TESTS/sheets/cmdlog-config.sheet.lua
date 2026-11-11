@@ -93,6 +93,7 @@ add({
 
 return {
   id = "cmdlog.config",
+  feature = "cmdlog.config-check",
   title = "cmdlog.nvim: unknown keys and bad values are reported once and the defaults stay",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

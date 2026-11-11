@@ -57,6 +57,7 @@ end
 
 return {
   id = "cmdlog.preview-execute",
+  feature = "cmdlog.preview",
   title = "cmdlog.nvim: preview_execute renders help and Lua, a risky entry and a bar stay refused",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

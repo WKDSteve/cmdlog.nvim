@@ -150,6 +150,7 @@ add({
 
 return {
   id = "cmdlog.favorites",
+  feature = "cmdlog.favorites",
   title = "cmdlog.nvim: favorites toggled, tagged, undone, reordered, exported and imported",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

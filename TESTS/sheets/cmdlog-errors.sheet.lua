@@ -2,6 +2,7 @@
 -- cmdlog.nvim/testblatt-bindings-checkliste; section 8 of ALL/manual-test-checklists/cmdlog.md).
 return {
   id = "cmdlog.errors",
+  feature = "cmdlog.errors",
   title = "cmdlog.nvim: a typed command that failed is marked with a cross",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

@@ -2,6 +2,7 @@
 -- section 1 of ALL/manual-test-checklists/cmdlog.md). Real Telescope, real keys.
 return {
   id = "cmdlog.combined",
+  feature = "cmdlog.combined",
   title = "cmdlog.nvim: bare :Cmdlog dedups, <CR> inserts without running, <Tab>, <C-r>, origins and dividers",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

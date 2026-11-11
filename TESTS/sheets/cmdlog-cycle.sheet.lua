@@ -45,6 +45,7 @@ steps[#steps + 1] = { wait = "not _G.P()" }
 
 return {
   id = "cmdlog.cycle",
+  feature = "cmdlog.cycle",
   title = "cmdlog.nvim: <C-s> rotates through the four pickers and keeps the prompt text",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

@@ -2,6 +2,7 @@
 -- cmdlog.nvim/testblatt-bindings-checkliste; section 12 of ALL/manual-test-checklists/cmdlog.md).
 return {
   id = "cmdlog.corrupt",
+  feature = "cmdlog.state-recovery",
   title = "cmdlog.nvim: corrupt favorites, stats and errors are backed up once and nothing breaks",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
