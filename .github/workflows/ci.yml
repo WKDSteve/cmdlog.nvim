@@ -7,6 +7,10 @@ on:
   # a run GitHub left hanging without jobs is started again with `gh workflow run ci.yml`
   workflow_dispatch:
 
+# The token reads the repository and nothing else: no job publishes.
+permissions:
+  contents: read
+
 jobs:
   # Gating: stylua + luacheck must pass.
   lint:
