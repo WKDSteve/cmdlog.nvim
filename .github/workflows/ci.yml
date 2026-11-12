@@ -4,6 +4,8 @@ on:
   push:
     branches: [ main ]
   pull_request:
+  # a run GitHub left hanging without jobs is started again with `gh workflow run ci.yml`
+  workflow_dispatch:
 
 jobs:
   # Gating: stylua + luacheck must pass.
