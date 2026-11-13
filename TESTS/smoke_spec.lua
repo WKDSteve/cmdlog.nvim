@@ -363,62 +363,131 @@ else
   previewer_mod.command_previewer = original_previewer
 end
 
--- ── picker_utils.open_picker: the real fzf-lua branch ───────────────────────
+-- ── picker_utils.open_picker: the fzf-lua branch ─────────────────────────────
 -- Same blind spot as the Telescope branch above, on the other backend:
 -- every existing suite bypasses open_picker entirely. Simpler than the
 -- Telescope branch -- decoration is Telescope-only by design (see the module
--- comment), so this just pins the argv/options fzf_exec actually receives
--- and the default action's dispatch.
-if not pcall(require, "fzf-lua") then
-  print("  skip picker_utils.open_picker/fzf (fzf-lua not on runtimepath)")
-  skipped = skipped + 1
-else
+-- comment), so this pins the arguments fzf_exec actually receives and the
+-- default action's dispatch. fzf-lua itself is not a test dependency (not in
+-- .testing.lua, not in CI), so a recording double stands in for it in
+-- package.loaded["fzf-lua"]: open_picker does `require("fzf-lua")` at call
+-- time and only ever calls `fzf_exec` on it. The real module, if one was
+-- loaded already, is put back afterwards.
+do
   local config = require("cmdlog.config")
   local picker_utils = require("cmdlog.ui.picker_utils")
-  local fzf = require("fzf-lua")
 
   local original_picker_backend = config.options.picker
-  local original_fzf_exec = fzf.fzf_exec
-  config.options.picker = "fzf"
+  local original_fzf_module = package.loaded["fzf-lua"]
+  local calls = {}
+  package.loaded["fzf-lua"] = {
+    fzf_exec = function(entries, opts)
+      calls[#calls + 1] = { entries = entries, opts = opts }
+    end,
+  }
 
-  local captured
-  ---@diagnostic disable-next-line: duplicate-set-field
-  fzf.fzf_exec = function(entries, opts)
-    captured = { entries = entries, opts = opts }
-  end
+  local ok_test, err_test = pcall(function()
+    config.options.picker = "fzf"
+    local entries = { "git status", "ls -la" }
+    picker_utils.open_picker(
+      entries,
+      { "git status" },
+      { fzf_prompt = ":test> ", sections = { { at = 1, label = "nvim history" } } }
+    )
+    local captured = calls[1]
+    check("open_picker(fzf): calls fzf_exec exactly once", #calls == 1, tostring(#calls))
+    check(
+      "open_picker(fzf): passes the caller's entries through undecorated, no section rows spliced in",
+      captured.entries == entries and vim.deep_equal(entries, { "git status", "ls -la" }),
+      vim.inspect(captured.entries)
+    )
+    check(
+      "open_picker(fzf): uses opts.fzf_prompt",
+      captured.opts.prompt == ":test> ",
+      tostring(captured.opts.prompt)
+    )
+    check(
+      "open_picker(fzf): preview is the {fn, type = 'cmd'} form fzf-lua expects",
+      type(captured.opts.preview) == "table"
+        and captured.opts.preview.type == "cmd"
+        and type(captured.opts.preview.fn) == "function",
+      vim.inspect(captured.opts.preview)
+    )
+    -- The preview fn is cmdlog's own command previewer: on Windows it has no
+    -- preview at all (POSIX one-liners), elsewhere a readable file previews
+    -- through `head`.
+    local readme = root .. "/README.md"
+    local preview = captured.opts.preview.fn("edit " .. readme)
+    if require("lib.nvim.cross.platform.is_windows")() then
+      check(
+        "open_picker(fzf): the preview fn is cmdlog's previewer (nil on Windows)",
+        preview == nil
+      )
+    else
+      check(
+        "open_picker(fzf): the preview fn is cmdlog's previewer (head of a readable file)",
+        type(preview) == "string" and preview:find("^head %-n 50 ") ~= nil,
+        tostring(preview)
+      )
+    end
 
-  picker_utils.open_picker({ "git status", "ls -la" }, {}, { fzf_prompt = ":test> " })
+    -- SEC-50: a preview -- and a picker's default action -- reads, it does
+    -- not run. The entry goes back onto the cmdline, same as the Telescope
+    -- backend's mappings.select, never straight to vim.cmd().
+    local fed
+    local original_feedkeys = vim.fn.feedkeys
+    local original_cmd = vim.cmd
+    local ran
+    ---@diagnostic disable-next-line: duplicate-set-field
+    vim.fn.feedkeys = function(keys, mode)
+      fed = { keys = keys, mode = mode }
+    end
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    vim.cmd = function(c)
+      ran = c
+    end
+    local ok_empty = pcall(captured.opts.actions["default"], {})
+    local fed_empty = fed
+    local ok_action = pcall(captured.opts.actions["default"], { "git status" })
+    vim.fn.feedkeys = original_feedkeys
+    vim.cmd = original_cmd
+    check(
+      "open_picker(fzf): the default action feeds ':<cmd>' back onto the cmdline, never executes it",
+      ok_action and fed ~= nil and fed.keys == ":git status" and fed.mode == "n" and ran == nil,
+      vim.inspect({ fed = fed, ran = ran })
+    )
+    check(
+      "open_picker(fzf): the default action ignores an empty selection",
+      ok_empty and fed_empty == nil,
+      vim.inspect(fed_empty)
+    )
 
-  check(
-    "open_picker(fzf): passes entries through undecorated",
-    vim.deep_equal(captured.entries, { "git status", "ls -la" }),
-    vim.inspect(captured.entries)
-  )
-  check("open_picker(fzf): uses opts.fzf_prompt", captured.opts.prompt == ":test> ")
-  check(
-    "open_picker(fzf): preview is the {fn, type = 'cmd'} form fzf-lua expects",
-    captured.opts.preview.type == "cmd" and type(captured.opts.preview.fn) == "function"
-  )
+    -- Without opts.fzf_prompt the generic prompt; opts.actions replaces the
+    -- default action table as a whole.
+    local own_actions = { ["default"] = function() end }
+    picker_utils.open_picker({ "pwd" }, {}, { actions = own_actions })
+    check(
+      "open_picker(fzf): falls back to the ':commands> ' prompt",
+      calls[2] ~= nil and calls[2].opts.prompt == ":commands> ",
+      vim.inspect(calls[2] and calls[2].opts.prompt)
+    )
+    check(
+      "open_picker(fzf): opts.actions is handed to fzf_exec unchanged",
+      calls[2] ~= nil and calls[2].opts.actions == own_actions
+    )
 
-  -- SEC-50: a preview -- and a picker's default action -- reads, it does
-  -- not run. The entry goes back onto the cmdline, same as the Telescope
-  -- backend's mappings.select, never straight to vim.cmd().
-  local fed
-  local original_feedkeys = vim.fn.feedkeys
-  ---@diagnostic disable-next-line: duplicate-set-field
-  vim.fn.feedkeys = function(keys, mode)
-    fed = { keys = keys, mode = mode }
-  end
-  captured.opts.actions["default"]({ "git status" })
-  vim.fn.feedkeys = original_feedkeys
-  check(
-    "open_picker(fzf): the default action feeds ':<cmd>' back onto the cmdline, never executes it",
-    fed ~= nil and fed.keys == ":git status" and fed.mode == "n",
-    vim.inspect(fed)
-  )
-
-  fzf.fzf_exec = original_fzf_exec
+    -- "fzf-lua" is the other accepted spelling (ERR-22, see open_picker).
+    config.options.picker = "fzf-lua"
+    picker_utils.open_picker({ "pwd" }, {}, {})
+    check(
+      "open_picker(fzf): picker = 'fzf-lua' takes the fzf branch too",
+      #calls == 3 and vim.deep_equal(calls[3].entries, { "pwd" }),
+      tostring(#calls)
+    )
+  end)
+  package.loaded["fzf-lua"] = original_fzf_module
   config.options.picker = original_picker_backend
+  check("open_picker(fzf): test body did not throw", ok_test, tostring(err_test))
 end
 
 -- ── core.risky: which patterns matched, not just whether any did ───────────

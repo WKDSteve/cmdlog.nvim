@@ -74,9 +74,10 @@ runtimepath, `open_picker`'s actual Telescope branch — entry decoration
 priority (favorite/known-bad/risky), the mappings-legend prompt title, and
 section-divider splicing, via stubbed `telescope.pickers.new`/
 `finders.new_table` rather than the usual monkey-patched `open_picker` itself
-— and, when fzf-lua is on the runtimepath, `open_picker`'s fzf branch (the
-argv/options `fzf_exec` actually receives, and the default action's
-dispatch); `ui.telescope-previewer`'s `define_preview` branch dispatch (refused/file/
+— and `open_picker`'s fzf branch (the entries/options `fzf_exec` actually
+receives, both accepted backend spellings, and the default action's
+dispatch), against a recording `fzf-lua` double in `package.loaded`, since
+fzf-lua is not a test dependency; `ui.telescope-previewer`'s `define_preview` branch dispatch (refused/file/
 lua/help/terminal/shell, `lib.nvim.system.job.start` stubbed so nothing ever
 actually spawns); `ui.mappings`' `attach_mappings` factory (select, toggle
 favorite, refresh, undo, tag, reorder, multi-select toggle, and delete's
@@ -172,13 +173,13 @@ Deliberately left untested, and why:
 - **The interactive window either backend actually opens** — telescope's own
   `Previewer:preview()`/`:find()` loop, fzf-lua's real floating terminal
   (cmdlog never references snacks.nvim as a backend, so that one was never a
-  candidate). Re-verified this round that telescope.nvim and fzf-lua are both
-  real siblings here (via lazy.nvim's data dir locally, and telescope.nvim via
-  a fresh checkout in CI) — that changed the previous verdict for what's
-  *around* that window: `ui.telescope-previewer`/`ui.mappings`/`ui.cycle` and
-  both of `open_picker`'s backend branches now have real suites (stubbing
-  just `pickers.new`/`finders.new_table`/`fzf_exec` themselves, capturing what
-  cmdlog hands them), not skips. Only the window loop each library owns
+  candidate). telescope.nvim is a real test dependency (`.testing.lua`
+  deps, a fresh checkout in CI), so what's *around* that window —
+  `ui.telescope-previewer`/`ui.mappings`/`ui.cycle` and `open_picker`'s
+  Telescope branch — has real suites stubbing just `pickers.new`/
+  `finders.new_table`, capturing what cmdlog hands them. fzf-lua is not a
+  dependency: its branch runs against a `package.loaded["fzf-lua"]` double
+  whose `fzf_exec` records the call, so it runs everywhere, never as a skip. Only the window loop each library owns
   internally stays out of scope, regardless of availability.
 
 ## A note on isolation
