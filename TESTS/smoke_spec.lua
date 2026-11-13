@@ -2056,11 +2056,12 @@ end
 
 -- SEC-33: a hand-edited project_history.json with a non-list value for a
 -- root must not crash get_project_history(); the whole load is rejected.
--- No chdir here on purpose: is_valid() rejects the file regardless of which
--- root ends up queried, and re-require()ing a module after this bootstrap's
--- relative runtimepath entry has followed a chdir elsewhere silently fails
--- to resolve it (see the two chdir'd blocks around this one, which never
--- reload a module while cwd is pointed away from the repo root).
+-- Runs inside a throwaway Git root of its own: get_project_history() only
+-- loads the file at all when the cwd is inside a Git repository, so without
+-- the chdir the result depended on where the run was started (from a cwd
+-- outside any repository nothing was loaded, the backup was never written
+-- and the recording case was silently skipped). The module is required
+-- before the chdir; the runtimepath entries of this bootstrap are absolute.
 do
   local config = require("cmdlog.config")
   local tmp = vim.fn.tempname() .. "-cmdlog-project-history-bad.json"
@@ -2069,29 +2070,41 @@ do
   config.options.project_history_path = tmp
   package.loaded["cmdlog.core.project_history"] = nil
   local project_history = require("cmdlog.core.project_history")
+  local original_cwd = vim.fn.getcwd()
+  local repo_dir = vim.fn.tempname()
 
-  local ok_call, history = pcall(project_history.get_project_history)
-  check("project_history: a malformed root value does not crash the caller", ok_call)
-  check("project_history: a malformed root value rejects the whole load", ok_call and #history == 0)
+  local ok_test, err_test = pcall(function()
+    vim.fn.mkdir(repo_dir .. "/.git", "p")
+    vim.fn.chdir(repo_dir)
 
-  -- ERR-11: rejecting the load must not mean silently discarding the file.
-  -- record() below is a load-modify-save cycle -- without a backup, the
-  -- very next record() overwrites the shape-invalid file with a near-empty
-  -- one and the original root's entry is gone without a trace.
-  check(
-    "project_history: a shape-invalid file is backed up before falling back to empty",
-    vim.fn.filereadable(tmp .. ".corrupt") == 1
-  )
-  local test_root = project_history.get_git_root()
-  if test_root then
+    local ok_call, history = pcall(project_history.get_project_history)
+    check("project_history: a malformed root value does not crash the caller", ok_call)
+    check(
+      "project_history: a malformed root value rejects the whole load",
+      ok_call and #history == 0
+    )
+
+    -- ERR-11: rejecting the load must not mean silently discarding the file.
+    -- record() below is a load-modify-save cycle -- without a backup, the
+    -- very next record() overwrites the shape-invalid file with a near-empty
+    -- one and the original root's entry is gone without a trace.
+    check(
+      "project_history: a shape-invalid file is backed up before falling back to empty",
+      vim.fn.filereadable(tmp .. ".corrupt") == 1
+    )
+    local test_root = project_history.get_git_root()
+    check("project_history: the throwaway Git root is found", test_root ~= nil)
     project_history.record("git log", test_root)
     local on_disk = require("cmdlog.core.store").load_json(tmp, {})
     check(
       "project_history: recording after a shape-invalid load still works and persists",
-      vim.deep_equal(on_disk, { [test_root] = { "git log" } }),
+      test_root ~= nil and vim.deep_equal(on_disk, { [test_root] = { "git log" } }),
       vim.inspect(on_disk)
     )
-  end
+  end)
+  vim.fn.chdir(original_cwd)
+  check("project_history: shape-invalid test body did not throw", ok_test, tostring(err_test))
+  vim.fn.delete(repo_dir, "rf")
   vim.fn.delete(tmp .. ".corrupt")
 
   config.options.project_history_path = require("cmdlog.config.DEFAULTS").project_history_path
