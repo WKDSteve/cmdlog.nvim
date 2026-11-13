@@ -68,3 +68,14 @@ each page answers.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+<!-- connections:begin (written by the app-icons tool of the workshop; change integrations.json there, not this block) -->
+## Connections
+
+![cmdlog.nvim: what it uses and what uses it](assets/graphs/cmdlog.nvim.png)
+
+**Uses**
+
+- [gitsuite.nvim](https://github.com/WKDSteve/gitsuite.nvim): cmdlog.nvim can open the git UI of gitsuite.nvim from a mapping (`gitsuite.features.ui`). ([picture](assets/graphs/pair/cmdlog.nvim--gitsuite.nvim.png))
+- [lib.nvim](https://github.com/WKDSteve/lib.nvim): the shared base of the plugins.
+<!-- connections:end -->
