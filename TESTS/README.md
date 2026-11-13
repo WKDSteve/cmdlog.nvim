@@ -1,13 +1,17 @@
 # Tests
 
-Lightweight, framework-free tests for cmdlog.nvim. No network, no plugins
-beyond `lib.nvim` (auto-detected as a sibling repo, or via
-`$REPOS_DIR`/`$LIB_NVIM_PATH`). telescope.nvim (+ its own
-plenary.nvim dependency) is optional and picked up the same way if present —
-CI now checks it out as a real sibling specifically so the telescope-only
-suites below run for real there instead of being skipped; locally, point
-`$REPOS_DIR` (or the individual path vars) at a directory that has it, or
-prepend it to the runtimepath yourself before requiring anything, e.g.:
+Lightweight, framework-free tests for cmdlog.nvim. No network. The
+dependencies are `lib.nvim`, telescope.nvim and plenary.nvim (only because
+telescope.nvim needs it); `scripts/test.sh` puts all three on the runtimepath
+and exits 1 when one of them is missing, so the telescope-only suites always
+run under the runner, locally as in CI.
+
+Only the plain `nvim -l TESTS/smoke_spec.lua` (see below) still treats
+telescope.nvim as optional: it looks for the three beside the repo (or in
+`$REPOS_DIR`; lib.nvim also in `$LIB_NVIM_PATH`, telescope.nvim and
+plenary.nvim also in `stdpath('data')/lazy`) and prints `skip` for the
+telescope-only suites when telescope.nvim is not found. To run them that way
+with a checkout elsewhere, prepend it to the runtimepath yourself, e.g.:
 
 ```sh
 nvim --cmd "lua vim.opt.rtp:append('/path/to/telescope.nvim'); vim.opt.rtp:append('/path/to/plenary.nvim')" -l TESTS/smoke_spec.lua

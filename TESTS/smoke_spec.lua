@@ -14,7 +14,7 @@
 -- $LIB_NVIM_PATH/$REPOS_DIR, matching the convention used by lib.nvim's
 -- other dependents (pickers.nvim, mdview.nvim).
 local this = debug.getinfo(1, "S").source:sub(2) -- strip leading '@'
-local tests_dir = vim.fn.fnamemodify(this, ":h")
+local tests_dir = vim.fn.fnamemodify(this, ":p:h") -- absolute, also for `nvim -l TESTS/...`
 local root = vim.fn.fnamemodify(tests_dir, ":h") -- <repo>/TESTS -> <repo>
 vim.opt.runtimepath:append(root)
 
