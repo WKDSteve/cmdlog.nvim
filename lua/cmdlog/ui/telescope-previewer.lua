@@ -57,6 +57,51 @@ local function stream(bufnr, opts)
   if not ok then append(bufnr, "Error: " .. tostring(err)) end
 end
 
+---@internal
+---Split an option value into words the way Neovim splits 'shell' and
+---'shellcmdflag' for `:!`: whitespace separates, a double-quoted span is one
+---word without its quotes. On Windows 'shell' holds a path with spaces in
+---quotes ('"C:\Program Files\Git\bin\bash.exe"') and 'shellcmdflag' is two
+---words ("/s /c"); passed through as they are, vim.system finds no
+---executable and cmd.exe gets one unknown switch.
+---@param value string
+---@return string[]
+local function option_words(value)
+  local words, i, n = {}, 1, #value
+  while i <= n do
+    local s = value:find("%S", i)
+    if not s then break end
+    local word, e = "", s
+    while e <= n and not value:sub(e, e):match("%s") do
+      if value:sub(e, e) == '"' then
+        local close = value:find('"', e + 1, true) or (n + 1)
+        word = word .. value:sub(e + 1, close - 1)
+        e = close + 1
+      else
+        word = word .. value:sub(e, e)
+        e = e + 1
+      end
+    end
+    words[#words + 1] = word
+    i = e
+  end
+  return words
+end
+
+---@internal
+---The job.start options that run `cmdline` through the user's shell, as `:!`
+---would.
+---@param cmdline string
+---@return table
+local function shell_job(cmdline)
+  local argv = option_words(vim.o.shell)
+  vim.list_extend(argv, option_words(vim.o.shellcmdflag))
+  argv[#argv + 1] = cmdline
+  return { command = table.remove(argv, 1), args = argv }
+end
+
+M._option_words = option_words
+
 --- Returns the Telescope buffer previewer.
 ---
 --- `:edit <file>` shows the file's first lines. `:help`, `:lua`, `:terminal`
@@ -114,7 +159,7 @@ function M.command_previewer()
       end
 
       if plan.kind == "terminal" then
-        stream(bufnr, { command = vim.o.shell, args = { vim.o.shellcmdflag, plan.arg } })
+        stream(bufnr, shell_job(plan.arg))
         return
       end
 
@@ -123,7 +168,7 @@ function M.command_previewer()
         -- reason: `plan.arg` is a full command line (e.g. "git status
         -- --short"), not an executable name, so it has to go through the
         -- shell rather than become a single, unresolvable argv[0].
-        stream(bufnr, { command = vim.o.shell, args = { vim.o.shellcmdflag, plan.arg } })
+        stream(bufnr, shell_job(plan.arg))
         return
       end
     end,

@@ -3058,11 +3058,21 @@ else
     )
   end
 
+  -- 'shell' and 'shellcmdflag' in the form Windows gives them: a quoted path
+  -- with a space and a flag of two words. Handed to vim.system as they are,
+  -- the quoted path is no executable (ENOENT) and cmd.exe gets one unknown
+  -- switch "/s /c"; split like `:!` splits them, they run.
+  local original_shell, original_flag = vim.o.shell, vim.o.shellcmdflag
+  vim.o.shell = '"/opt/my shell/bin/cmd"'
+  vim.o.shellcmdflag = "/s /c"
+
   do
     render(":terminal top")
     check(
-      "define_preview: :terminal streams via $SHELL -c <arg>",
-      captured_job ~= nil and captured_job.command == vim.o.shell,
+      "define_preview: :terminal streams via 'shell' 'shellcmdflag' <arg>, split into words",
+      captured_job ~= nil
+        and captured_job.command == "/opt/my shell/bin/cmd"
+        and vim.deep_equal(captured_job.args, { "/s", "/c", "top" }),
       vim.inspect(captured_job)
     )
   end
@@ -3073,14 +3083,22 @@ else
       -- ERR-01: a full command line is not a resolvable executable on its
       -- own (job.start's argv would be { "git status --short" }, one
       -- element -- ENOENT). Same shape as the :terminal branch above: run
-      -- it through $SHELL -c <line>, exactly what a real `:!` does.
-      "define_preview: a multi-word shell command runs through $SHELL, not as argv[0]",
+      -- it through 'shell' 'shellcmdflag' <line>, exactly what a real `:!` does.
+      "define_preview: a multi-word shell command runs through 'shell', not as argv[0]",
       captured_job ~= nil
-        and captured_job.command == vim.o.shell
-        and vim.tbl_contains(captured_job.args, "git status --short"),
+        and captured_job.command == "/opt/my shell/bin/cmd"
+        and vim.deep_equal(captured_job.args, { "/s", "/c", "git status --short" }),
       vim.inspect(captured_job)
     )
   end
+
+  vim.o.shell, vim.o.shellcmdflag = original_shell, original_flag
+  check(
+    "option_words: words, a quoted span without its quotes, no empty words",
+    vim.deep_equal(tp._option_words('  -a  "b c"d  -e '), { "-a", "b cd", "-e" })
+      and vim.deep_equal(tp._option_words(""), {}),
+    vim.inspect(tp._option_words('  -a  "b c"d  -e '))
+  )
 
   do
     -- ERR-01: job.start -> vim.system raises synchronously for a
