@@ -1,5 +1,5 @@
--- Live check: `preview_execute = true` renders help and Lua, and still refuses a risky entry and an argument
--- with a `|` (task cmdlog.nvim/testblatt-bindings-checkliste; section 7 of
+-- Live check: `preview_execute = true` renders help, Lua, `:!` and `:terminal` (both run through 'shell'), and still
+-- refuses a risky entry and an argument with a `|` (task cmdlog.nvim/testblatt-bindings-checkliste; section 7 of
 -- ALL/manual-test-checklists/cmdlog.md). The risky entry would delete a real directory of the sandbox.
 local function at(value)
   return {
@@ -12,14 +12,47 @@ local steps = {
   {
     lua = [[dofile(vim.fn.getcwd() .. "/TESTS/sheets/_helpers.lua")
     _G.boot({ preview_execute = true })
+    -- The same shell on every machine, in the form Windows gives it: a quoted path and a two-word flag
+    if vim.fn.has("win32") == 1 then
+      vim.o.shell = '"' .. vim.fn.exepath("cmd.exe") .. '"'
+      vim.o.shellcmdflag = "/s /c"
+    else
+      vim.o.shell = "sh"
+      vim.o.shellcmdflag = "-c"
+    end
     vim.fn.mkdir(_G.p("build"), "p")
-    _G.seed("help nvim_buf_get_lines", "lua 40 + 2", "!rm -rf build", "help x | let g:injected = 1")]],
-    note = "newest first: an argument with a bar, a risky entry, Lua, help",
+    _G.seed(
+      "help nvim_buf_get_lines",
+      "lua 40 + 2",
+      "!rm -rf build",
+      "help x | let g:injected = 1",
+      "terminal echo cmdlog-terminal-preview",
+      "!echo cmdlog-shell-preview"
+    )]],
+    note = "newest first: a shell command, a terminal command, an argument with a bar, a risky entry, Lua, help",
   },
   { input = ":Cmdlog nvim<CR>" },
   { wait = "_G.ready()" },
 }
 local list = {
+  at("!echo cmdlog-shell-preview"),
+  {
+    {
+      wait = [[_G.preview():find("cmdlog-shell-preview", 1, true) ~= nil
+        and not _G.preview():find("!echo", 1, true)]],
+      timeout = 5000,
+      note = ":! streams what the command prints, run through 'shell'",
+    },
+  },
+  at("terminal echo cmdlog-terminal-preview"),
+  {
+    {
+      wait = [[_G.preview():find("cmdlog-terminal-preview", 1, true) ~= nil
+        and not _G.preview():find("terminal echo", 1, true)]],
+      timeout = 5000,
+      note = ":terminal <cmd> streams the same way",
+    },
+  },
   at("help x | let g:injected = 1"),
   {
     {
@@ -58,7 +91,7 @@ end
 return {
   id = "cmdlog.preview-execute",
   feature = "cmdlog.preview",
-  title = "cmdlog.nvim: preview_execute renders help and Lua, a risky entry and a bar stay refused",
+  title = "cmdlog.nvim: preview_execute renders help, Lua, :! and :terminal, a risky entry and a bar stay refused",
   task = "cmdlog.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   requires = {

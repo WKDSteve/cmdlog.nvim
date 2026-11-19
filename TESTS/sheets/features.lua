@@ -53,7 +53,8 @@ return {
   },
   {
     id = "cmdlog.preview",
-    title = "The preview shows what a command would open without running it, unless preview_execute allows it",
+    title = "The preview shows what a command would open without running it, unless preview_execute allows it"
+      .. " (:help in a headless Neovim, :! and :terminal through 'shell')",
     surface = { "config:preview_execute" },
     docs = "docs/FEATURES/PICKER.md",
   },
@@ -95,17 +96,23 @@ return {
     title = 'With picker = "fzf" every picker runs on fzf-lua instead of Telescope',
     surface = { "config:picker" },
     docs = "docs/FEATURES/PICKER.md",
+    -- fzf-lua starts the fzf program and the previewer's shell one-liners; neither fzf-lua nor fzf is a dependency of
+    -- the suite (smoke_spec drives the previewer against an fzf-lua double). Hand run: task
+    -- cmdlog.nvim/manual-checklist-run, section 7 of ALL/manual-test-checklists/cmdlog.md.
+    perf = "manual:needs fzf-lua and the fzf program, which are no dependency of the suite",
   },
   {
     id = "cmdlog.keymaps",
     title = "keymaps maps a :Cmdlog subcommand to a key of your own, which which-key picks up",
     surface = { "config:keymaps" },
     docs = "docs/FEATURES/PICKER.md",
+    perf = "skip:starts no process; it only maps keys to :Cmdlog subcommands (smoke_spec checks the maps)",
   },
   {
     id = "cmdlog.picker-mappings",
     title = "Every picker key is remappable or switched off, and the prompt title shows the active ones",
     surface = { "config:mappings" },
     docs = "docs/FEATURES/PICKER.md",
+    perf = "skip:starts no process; remapping only changes which key calls a picker action (smoke_spec checks it)",
   },
 }
