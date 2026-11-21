@@ -45,4 +45,33 @@ return {
   },
   -- gated: a failed conformance check makes `scripts/test.sh conformance` exit 1 (docs/CONFORMANCE.md of testing.nvim)
   conformance = { gate = true },
+  ci = {
+    -- The GitHub workflow, generated: `testing init --workflow=public --force` writes .github/workflows/ci.yml from
+    -- this (testing.nvim docs/WORKFLOW-CI.md); the step workflow-in-sync keeps the two together.
+    workflow = {
+      name = "cmdlog.nvim",
+      layout = "hosted",
+      -- the steps that depend on the platform: the windows and macOS legs run only these
+      platform = { "suite", "conformance" },
+      -- `testing ci land`: a check branch ci/** runs the hosted legs, main moves to a commit only once it is green there
+      land = true,
+      -- telescope.nvim and plenary.nvim are in `deps` (on the runtimepath of the specs); naming them here makes the
+      -- generator check them out from these pinned commits instead of a WKDSteve repository at ci-verified.
+      checkouts = {
+        {
+          repo = "nvim-telescope/telescope.nvim",
+          ref = "40aedd8a68c78a656a10a8d62d80c54af59420fb",
+          why = "the default picker: the telescope modules get real require() coverage instead of being skipped",
+        },
+        {
+          repo = "nvim-lua/plenary.nvim",
+          ref = "74b06c6c75e4eeb3108ec01852001636d85a932b",
+          why = "telescope.nvim does not load without it",
+        },
+      },
+    },
+    steps = {
+      ["workflow-in-sync"] = { preset = "workflow-in-sync" },
+    },
+  },
 }
